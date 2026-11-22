@@ -34,13 +34,16 @@
     </div>
 
     <!-- Approval Stamp Indicator -->
-    <div style="text-align: center; margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <span class="gatepass-stamp" style="{% if outpass.parent_approval == 'Approved' %}border-color: #047857; color: #047857;{% else %}border-color: #d97706; color: #d97706;{% endif %}">
+        PARENT: {{ 'CONSENT VERIFIED' if outpass.parent_approval == 'Approved' else outpass.parent_approval|upper }}
+      </span>
       {% if outpass.status == 'Approved' %}
-        <span class="gatepass-stamp">VERIFIED & APPROVED</span>
+        <span class="gatepass-stamp">WARDEN: APPROVED</span>
       {% elif outpass.status == 'Returned' %}
         <span class="gatepass-stamp" style="border-color: #475569; color: #475569;">RETURN LOGGED</span>
       {% else %}
-        <span class="gatepass-stamp" style="border-color: #ef4444; color: #ef4444;">{{ outpass.status }}</span>
+        <span class="gatepass-stamp" style="border-color: #ef4444; color: #ef4444;">WARDEN: {{ outpass.status }}</span>
       {% endif %}
     </div>
 
@@ -85,14 +88,21 @@
         <span style="font-weight: 500; font-size: 0.9rem;">{{ outpass.reason }}</span>
       </div>
 
-      <div class="gatepass-item">
-        <label>Guardian / Emergency Phone</label>
-        <span>{{ outpass.emergency_contact }}</span>
+      <div class="gatepass-item" style="grid-column: span 2; background: #fefce8; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px dashed #fde047;">
+        <label style="color: #854d0e;">Parent / Guardian Verification</label>
+        <span style="font-size: 0.875rem; color: #713f12;">
+          <strong>Consent:</strong> {{ outpass.parent_approval or 'Pending' }} &bull;
+          <strong>Guardian:</strong> {{ outpass.guardian_name or 'Parent' }} ({{ outpass.emergency_contact }})
+          {% if outpass.parent_remarks %}<br><strong>Note:</strong> "{{ outpass.parent_remarks }}"{% endif %}
+        </span>
       </div>
 
-      <div class="gatepass-item">
-        <label>Reviewed & Authorized By</label>
-        <span>{{ outpass.reviewer_name or 'Chief Warden Office' }}</span>
+      <div class="gatepass-item" style="grid-column: span 2;">
+        <label>Warden Clearance & Authority</label>
+        <span>
+          {{ outpass.reviewer_name or 'Chief Warden Office' }}
+          {% if outpass.admin_remarks %} &mdash; <em>"{{ outpass.admin_remarks }}"</em>{% endif %}
+        </span>
       </div>
     </div>
 

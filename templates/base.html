@@ -30,13 +30,32 @@
               <li class="nav-item"><a href="{{ url_for('student_room') }}">My Room</a></li>
               <li class="nav-item"><a href="{{ url_for('student_complaints') }}">Complaints</a></li>
               <li class="nav-item"><a href="{{ url_for('student_outpass') }}">Outpass</a></li>
+              <li class="nav-item"><a href="{{ url_for('student_fees') }}">Fees & Dues</a></li>
+              <li class="nav-item"><a href="{{ url_for('student_attendance') }}">Attendance</a></li>
+            {% elif current_user.role == 'parent' %}
+              <li class="nav-item"><a href="{{ url_for('parent_dashboard') }}">Ward Overview</a></li>
+              <li class="nav-item">
+                <a href="{{ url_for('parent_outpasses') }}">
+                  Outpasses
+                  {% if pending_parent_outpass_count and pending_parent_outpass_count > 0 %}
+                    <span class="badge badge-warning" style="margin-left: 0.25rem; font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ pending_parent_outpass_count }}</span>
+                  {% endif %}
+                </a>
+              </li>
+              <li class="nav-item"><a href="{{ url_for('parent_room') }}">Room Details</a></li>
+              <li class="nav-item"><a href="{{ url_for('parent_fees') }}">Fee & Payments</a></li>
+              <li class="nav-item"><a href="{{ url_for('parent_attendance') }}">Attendance</a></li>
+              <li class="nav-item"><a href="{{ url_for('parent_queries') }}">Helpdesk</a></li>
             {% elif current_user.role == 'admin' %}
               <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}">Admin Portal</a></li>
-              <li class="nav-item"><a href="{{ url_for('admin_notices') }}">Manage Notices</a></li>
-              <li class="nav-item"><a href="{{ url_for('admin_rooms') }}">Rooms & Allotment</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_rooms') }}">Rooms</a></li>
               <li class="nav-item"><a href="{{ url_for('admin_complaints') }}">Complaints</a></li>
               <li class="nav-item"><a href="{{ url_for('admin_outpass') }}">Outpass Approvals</a></li>
-              <li class="nav-item"><a href="{{ url_for('admin_mess') }}">Edit Mess</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_fees') }}">Fees</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_attendance') }}">Attendance</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_parent_queries') }}">Parent Desk</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_notices') }}">Notices</a></li>
+              <li class="nav-item"><a href="{{ url_for('admin_mess') }}">Mess</a></li>
               <li class="nav-item"><a href="{{ url_for('admin_students') }}">Students</a></li>
             {% endif %}
           {% endif %}

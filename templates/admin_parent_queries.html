@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent Inquiries Desk - HostelSphere Admin{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>✉️ Parent Communications & Inquiries Desk</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      Review parental questions, medical concerns, and dietary requests submitted by guardians.
+    </p>
+  </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;">Filter Inquiries:</span>
+    {% for s in ['Pending', 'Resolved', 'All'] %}
+      <a href="{{ url_for('admin_parent_queries', status=s) }}" 
+         class="btn btn-sm {% if selected_status == s %}btn-primary{% else %}btn-secondary{% endif %}">
+        {{ s }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Queries List -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📬</span>
+      <span>Parent Inquiries List</span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">{{ queries|length }} Inquiries</span>
+  </div>
+
+  {% if queries %}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      {% for q in queries %}
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; {% if q.status == 'Pending' %}border-left: 5px solid #f59e0b; background: #fffdf5;{% else %}border-left: 5px solid #10b981;{% endif %}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                <h3 style="font-size: 1.15rem; margin: 0;">{{ q.subject }}</h3>
+                <span class="badge" style="background: #f1f5f9; color: #334155;">{{ q.category }}</span>
+                <span class="badge badge-{{ q.status|lower }}">{{ q.status }}</span>
+              </div>
+              <div style="font-size: 0.825rem; color: var(--text-muted);">
+                From: <strong>{{ q.parent_name }}</strong> (<a href="tel:{{ q.parent_phone }}">{{ q.parent_phone }}</a>) &bull;
+                Ward: <strong>{{ q.student_name }}</strong> (Roll: {{ q.roll_number }}, Room: {{ q.room_number or 'N/A' }}) &bull;
+                Submitted {{ q.created_at|format_datetime }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Body -->
+          <div style="background: #f8fafc; border: 1px solid var(--border-light); padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; font-size: 0.9rem; color: #334155;">
+            <strong>Parent Message:</strong> {{ q.message }}
+          </div>
+
+          <!-- Warden Reply Section -->
+          {% if q.status == 'Pending' %}
+            <form method="POST" action="{{ url_for('admin_reply_query', query_id=q.id) }}" style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 1rem;">
+              <label class="form-label" style="color: #1e40af; font-weight: 600;">
+                Chief Warden Official Reply:
+              </label>
+              <div style="display: flex; gap: 0.75rem; align-items: flex-start; flex-wrap: wrap;">
+                <textarea name="admin_reply" class="form-control" rows="2" style="flex: 1; min-width: 280px;"
+                          placeholder="Type your response to the parent here..." required></textarea>
+                <button type="submit" class="btn btn-primary" style="align-self: flex-end;">
+                  Send Reply & Resolve
+                </button>
+              </div>
+            </form>
+          {% else %}
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem 1rem; color: #1e40af; font-size: 0.875rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <strong>🛡️ Chief Warden Response:</strong>
+                <span style="font-size: 0.75rem; color: #3b82f6;">Replied on {{ q.replied_at|format_datetime }}</span>
+              </div>
+              <p style="margin: 0;">{{ q.admin_reply }}</p>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="text-align: center; color: var(--text-muted); padding: 3rem 0; margin: 0;">
+      No inquiries found with status "{{ selected_status }}".
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

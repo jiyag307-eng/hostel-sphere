@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Fees & Payments - HostelSphere{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>💳 Hostel Fees & Digital Invoicing</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      {% if current_user.role == 'parent' %}
+        Manage hostel accommodation fees, mess advances, and amenity dues for your ward <strong>{{ student.full_name }}</strong>.
+      {% else %}
+        Review your hostel rent invoices, payment receipts, and clear pending dues online.
+      {% endif %}
+    </p>
+  </div>
+  {% if current_user.role == 'parent' %}
+    <a href="{{ url_for('parent_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Parent Dashboard</a>
+  {% else %}
+    <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Student Dashboard</a>
+  {% endif %}
+</div>
+
+<!-- Fee Metrics Summary Cards -->
+<div class="grid grid-cols-3" style="margin-bottom: 2rem;">
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Total Billed</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+      ₹{{ "{:,.0f}".format(summary.total_billed) }}
+    </div>
+    <span style="font-size: 0.825rem; color: var(--text-muted);">Cumulative academic year fees</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--success);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Total Paid</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #047857; margin: 0.25rem 0;">
+      ₹{{ "{:,.0f}".format(summary.total_paid) }}
+    </div>
+    <span style="font-size: 0.825rem; color: #047857; font-weight: 600;">Verified transactions & receipts</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid {% if summary.total_pending > 0 %}var(--warning){% else %}var(--success){% endif %};">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Pending Balance</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: {% if summary.total_pending > 0 %}#b45309{% else %}#047857{% endif %}; margin: 0.25rem 0;">
+      ₹{{ "{:,.0f}".format(summary.total_pending) }}
+    </div>
+    <span style="font-size: 0.825rem; color: {% if summary.total_pending > 0 %}#b45309{% else %}#047857{% endif %}; font-weight: 500;">
+      {% if summary.total_pending > 0 %}Action required: Please clear dues{% else %}No outstanding balance!{% endif %}
+    </span>
+  </div>
+</div>
+
+<!-- Fee Invoices Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📑</span>
+      <span>Fee Invoices & Breakdown</span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+      Student: {{ student.full_name }} (Roll: {{ student.username }})
+    </span>
+  </div>
+
+  {% if fees %}
+    <div style="overflow-x: auto;">
+      <table class="table" style="width: 100%; text-align: left;">
+        <thead>
+          <tr>
+            <th>Invoice Title / Description</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Receipt / Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in fees %}
+            <tr>
+              <td>
+                <strong style="color: #0f172a; font-size: 0.95rem;">{{ f.title }}</strong>
+                {% if f.receipt_number %}
+                  <div style="font-size: 0.775rem; color: var(--text-muted); font-family: monospace;">
+                    Receipt: {{ f.receipt_number }} &bull; Ref: {{ f.transaction_ref }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge" style="background: #f1f5f9; color: #334155;">{{ f.fee_type }}</span>
+              </td>
+              <td>
+                <strong style="font-size: 1.05rem; color: #1e293b;">₹{{ "{:,.0f}".format(f.amount) }}</strong>
+              </td>
+              <td>
+                <span style="font-size: 0.875rem; color: var(--text-muted);">{{ f.due_date|format_datetime('%d %b %Y') }}</span>
+              </td>
+              <td>
+                <span class="badge badge-{{ f.status|lower }}">{{ f.status }}</span>
+                {% if f.paid_date %}
+                  <div style="font-size: 0.75rem; color: #047857; margin-top: 0.2rem;">
+                    Paid on {{ f.paid_date|format_datetime('%d %b %Y') }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if f.status == 'Paid' %}
+                  <a href="{{ url_for('view_fee_receipt', fee_id=f.id) }}" class="btn btn-sm btn-outline" target="_blank">
+                    🖨️ Receipt
+                  </a>
+                {% else %}
+                  <button type="button" class="btn btn-sm btn-primary" onclick="openPaymentModal('{{ f.id }}', '{{ f.title }}', '{{ f.amount }}')">
+                    ⚡ Pay Now
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">🧾</div>
+      <h3>No Fee Records Available</h3>
+      <p style="margin: 0;">No invoices have been generated for this student yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: Simulated Payment Gateway -->
+<div id="paymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+  <div class="card" style="max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-xl); background: white;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="margin: 0;">🔒 Secure Fee Payment</h3>
+      <button type="button" onclick="closePaymentModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+      <span style="font-size: 0.775rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Payee Invoice</span>
+      <strong id="modalFeeTitle" style="font-size: 1rem; color: #1e293b; display: block; margin-bottom: 0.25rem;">Hostel Fee</strong>
+      <div style="font-size: 1.5rem; font-weight: 800; color: #2563eb;">
+        ₹<span id="modalFeeAmount">0</span>
+      </div>
+    </div>
+
+    <form method="POST" id="modalPaymentForm">
+      <div class="form-group">
+        <label class="form-label">Select Payment Method</label>
+        <select name="payment_method" class="form-select" required>
+          <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
+          <option value="NetBanking">Net Banking (SBI / HDFC / ICICI / PNB)</option>
+          <option value="Debit Card">Debit Card</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payer Name / Note</label>
+        <input type="text" name="payer_name" class="form-control" value="{{ current_user.full_name }}" required>
+      </div>
+
+      <div style="background: #eff6ff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.8rem; color: #1e40af; margin-bottom: 1.25rem;">
+        ⚡ Instant simulation: Payment is verified and an official printable receipt is generated immediately.
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+        <button type="submit" class="btn btn-success">Confirm & Pay Dues</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openPaymentModal(feeId, title, amount) {
+  document.getElementById('modalFeeTitle').textContent = title;
+  document.getElementById('modalFeeAmount').textContent = Number(amount).toLocaleString('en-IN');
+  document.getElementById('modalPaymentForm').action = "/fees/" + feeId + "/pay";
+  document.getElementById('paymentModal').style.display = 'flex';
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').style.display = 'none';
+}
+</script>
+{% endblock %}

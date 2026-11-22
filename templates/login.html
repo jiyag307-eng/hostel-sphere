@@ -9,7 +9,7 @@
       <div class="brand-icon" style="margin: 0 auto 1rem auto; width: 3rem; height: 3rem; font-size: 1.5rem;">H</div>
       <h2 style="margin-bottom: 0.35rem;">Hostel Portal Sign In</h2>
       <p style="color: var(--text-muted); font-size: 0.9rem;">
-        Enter your Roll Number or Admin Username to continue
+        Enter your Roll Number, Parent ID, or Staff Username
       </p>
     </div>
 
@@ -18,9 +18,12 @@
       <span style="font-size: 0.775rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
         ⚡ Demo Quick Fill
       </span>
-      <div style="display: flex; gap: 0.5rem; justify-content: center;">
+      <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
         <button type="button" class="btn btn-sm btn-secondary" onclick="fillCreds('25001003043', 'student123')">
           👤 Student (Jiyansh)
+        </button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="fillCreds('parent_25001003043', 'parent123')" style="border: 1px solid #f59e0b; color: #92400e;">
+          👨‍👩‍👦 Parent (Mr. Rakesh)
         </button>
         <button type="button" class="btn btn-sm btn-secondary" onclick="fillCreds('admin', 'admin123')">
           🛡️ Warden (Admin)

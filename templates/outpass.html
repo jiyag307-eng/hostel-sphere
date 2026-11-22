@@ -74,9 +74,16 @@
             <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; box-shadow: var(--shadow-sm); {% if o.status == 'Approved' %}border-left: 4px solid var(--success);{% elif o.status == 'Pending' %}border-left: 4px solid var(--warning);{% endif %}">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
                 <div>
-                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
                     <h3 style="font-size: 1.15rem; margin: 0;">{{ o.destination }}</h3>
-                    <span class="badge badge-{{ o.status|lower }}">{{ o.status }}</span>
+                    <span class="badge badge-{{ o.status|lower }}">Warden: {{ o.status }}</span>
+                    {% if o.parent_approval == 'Approved' %}
+                      <span class="badge badge-parent-approved">✓ Parent Approved</span>
+                    {% elif o.parent_approval == 'Rejected' %}
+                      <span class="badge badge-parent-rejected">✕ Parent Rejected</span>
+                    {% else %}
+                      <span class="badge badge-parent-pending">⏳ Pending Parent Approval</span>
+                    {% endif %}
                   </div>
                   <div style="font-size: 0.825rem; color: var(--text-muted);">
                     Applied on {{ o.created_at|format_datetime }}
@@ -106,9 +113,17 @@
                 <strong>Reason:</strong> {{ o.reason }}
               </p>
 
+              <!-- Parent & Warden Notes -->
+              {% if o.parent_remarks %}
+                <div style="font-size: 0.85rem; padding: 0.45rem 0.75rem; background: #fefce8; border: 1px solid #fef08a; border-radius: var(--radius-sm); color: #854d0e; margin-top: 0.5rem;">
+                  <strong>👨‍👩‍👦 Parent Remarks:</strong> {{ o.parent_remarks }}
+                  {% if o.parent_action_at %}<span style="color: #a16207; font-size: 0.775rem;"> &bull; {{ o.parent_action_at|format_datetime }}</span>{% endif %}
+                </div>
+              {% endif %}
+
               {% if o.admin_remarks %}
                 <div style="font-size: 0.85rem; padding: 0.5rem 0.75rem; background: #eff6ff; border-radius: var(--radius-sm); color: #1e40af; margin-top: 0.5rem;">
-                  <strong>Warden Note:</strong> {{ o.admin_remarks }}
+                  <strong>🛡️ Warden Note:</strong> {{ o.admin_remarks }}
                 </div>
               {% endif %}
             </div>

@@ -56,5 +56,38 @@ def init_db():
     print("Database initialized successfully.")
 
 
+def upgrade_db():
+    """Ensure any newly added columns and tables exist in an existing database."""
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+
+    # Create new tables if not present
+    with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
+        schema_script = f.read()
+    conn.executescript(schema_script)
+
+    # Check and add columns to outpasses if missing
+    cur.execute("PRAGMA table_info(outpasses)")
+    columns = [row[1] for row in cur.fetchall()]
+    if 'parent_approval' not in columns:
+        try:
+            cur.execute("ALTER TABLE outpasses ADD COLUMN parent_approval TEXT DEFAULT 'Pending'")
+        except Exception:
+            pass
+    if 'parent_remarks' not in columns:
+        try:
+            cur.execute("ALTER TABLE outpasses ADD COLUMN parent_remarks TEXT")
+        except Exception:
+            pass
+    if 'parent_action_at' not in columns:
+        try:
+            cur.execute("ALTER TABLE outpasses ADD COLUMN parent_action_at TIMESTAMP")
+        except Exception:
+            pass
+
+    conn.commit()
+    conn.close()
+
+
 if __name__ == '__main__':
     init_db()

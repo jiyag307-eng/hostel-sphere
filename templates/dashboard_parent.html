@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent Portal - HostelSphere{% endblock %}
+
+{% block content %}
+<!-- Ward Profile Banner -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; border: none; padding: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+        <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+          👨‍👩‍👦 Parent & Guardian Portal
+        </span>
+        <span style="background: #f59e0b; color: #000; padding: 0.2rem 0.65rem; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700;">
+          Ward Enrolled: Active
+        </span>
+      </div>
+      <h1 style="color: white; font-size: 1.85rem; margin-bottom: 0.35rem;">
+        {{ current_user.full_name }} &bull; Ward: <span style="color: #93c5fd;">{{ ward.full_name }}</span>
+      </h1>
+      <p style="color: #cbd5e1; margin: 0; font-size: 0.95rem;">
+        Roll No: <strong style="color: white; font-family: monospace;">{{ ward.username }}</strong> &bull;
+        Branch: <strong style="color: white;">{{ ward.branch or 'Engineering' }}</strong> (Sem {{ ward.semester or '3' }}) &bull;
+        Student Phone: <a href="tel:{{ ward.phone }}" style="color: #bfdbfe; font-weight: 600;">{{ ward.phone or 'N/A' }}</a>
+      </p>
+    </div>
+
+    <!-- Ward Room Pill -->
+    <div style="background: rgba(255,255,255,0.12); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); text-align: center; border: 1px solid rgba(255,255,255,0.2);">
+      <span style="font-size: 0.775rem; text-transform: uppercase; color: #cbd5e1; font-weight: 700; display: block;">Allotted Hostel Room</span>
+      {% if allotment %}
+        <span style="font-size: 1.75rem; font-weight: 800; color: #67e8f9; display: block; line-height: 1.2;">
+          {{ allotment.room_number }}
+        </span>
+        <span style="font-size: 0.825rem; color: #e2e8f0;">
+          {{ allotment.block }} (Floor {{ allotment.floor }}) &bull; Bed #{{ allotment.bed_number }}
+        </span>
+      {% else %}
+        <span style="font-size: 1.1rem; font-weight: 600; color: #fde047; display: block;">Allotment Pending</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Pending Outpasses Alert Banner (if any) -->
+{% if pending_outpasses %}
+  <div class="alert alert-warning" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; border-left: 5px solid #f59e0b; padding: 1.25rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 1.75rem;">⚠️</span>
+      <div>
+        <strong style="font-size: 1.05rem; display: block;">Action Required: Outpass Approval Pending</strong>
+        <span>Your child {{ ward.full_name }} has requested permission to leave campus. Please review and authorize below.</span>
+      </div>
+    </div>
+    <a href="{{ url_for('parent_outpasses') }}" class="btn btn-primary btn-sm">
+      Review {{ pending_outpasses|length }} Leave Request(s) &rarr;
+    </a>
+  </div>
+{% endif %}
+
+<!-- Quick KPI Summary Metrics -->
+<div class="grid grid-cols-4" style="margin-bottom: 2rem;">
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Outpasses</span>
+    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+      {{ pending_outpasses|length }} <span style="font-size: 0.85rem; font-weight: 500; color: #b45309;">Pending Approval</span>
+    </div>
+    <a href="{{ url_for('parent_outpasses') }}" style="font-size: 0.825rem; font-weight: 600;">Manage Outpasses &rarr;</a>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid {% if fee_summary.pending_amount > 0 %}var(--warning){% else %}var(--success){% endif %};">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Hostel Fee Dues</span>
+    <div style="font-size: 1.6rem; font-weight: 800; color: {% if fee_summary.pending_amount > 0 %}#b45309{% else %}#047857{% endif %}; margin: 0.25rem 0;">
+      ₹{{ "{:,.0f}".format(fee_summary.pending_amount) }}
+    </div>
+    <a href="{{ url_for('parent_fees') }}" style="font-size: 0.825rem; font-weight: 600;">View & Pay Fees &rarr;</a>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Curfew Attendance</span>
+    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+      {{ attendance_stats.rate }}% <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Recent Check-ins</span>
+    </div>
+    <a href="{{ url_for('parent_attendance') }}" style="font-size: 0.825rem; font-weight: 600;">View Attendance Log &rarr;</a>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--accent);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Warden Communication</span>
+    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+      {{ open_queries_count }} <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Open Inquiries</span>
+    </div>
+    <a href="{{ url_for('parent_queries') }}" style="font-size: 0.825rem; font-weight: 600;">Contact Warden &rarr;</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-3">
+  <!-- Left Column: Pending / Recent Outpasses & Room Details -->
+  <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Outpass Review Section -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🎫</span>
+          <span>Ward's Gate Outpass Applications</span>
+        </div>
+        <a href="{{ url_for('parent_outpasses') }}" class="btn btn-sm btn-secondary">View All</a>
+      </div>
+
+      {% if recent_outpasses %}
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+          {% for o in recent_outpasses %}
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; {% if o.parent_approval == 'Pending' %}border-left: 4px solid #f59e0b; background: #fffdf5;{% elif o.parent_approval == 'Approved' %}border-left: 4px solid #10b981;{% else %}border-left: 4px solid #ef4444;{% endif %}">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                    <h3 style="font-size: 1.15rem; margin: 0;">{{ o.destination }}</h3>
+                    {% if o.parent_approval == 'Approved' %}
+                      <span class="badge badge-parent-approved">✓ You Approved</span>
+                    {% elif o.parent_approval == 'Rejected' %}
+                      <span class="badge badge-parent-rejected">✕ You Rejected</span>
+                    {% else %}
+                      <span class="badge badge-parent-pending">⏳ Your Consent Required</span>
+                    {% endif %}
+                    <span class="badge badge-{{ o.status|lower }}">Warden: {{ o.status }}</span>
+                  </div>
+                  <div style="font-size: 0.825rem; color: var(--text-muted);">
+                    Applied on {{ o.created_at|format_datetime }} &bull; Contact: {{ o.emergency_contact }}
+                  </div>
+                </div>
+
+                {% if o.status == 'Approved' %}
+                  <a href="{{ url_for('view_gate_pass', outpass_id=o.id) }}" class="btn btn-sm btn-outline" target="_blank">
+                    📄 View Gate Pass
+                  </a>
+                {% endif %}
+              </div>
+
+              <!-- Timings Pill -->
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Departure</span>
+                  <strong style="color: #1e40af; font-size: 0.9rem;">{{ o.departure_time|format_datetime }}</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Expected Return</span>
+                  <strong style="color: #b91c1c; font-size: 0.9rem;">{{ o.expected_return|format_datetime }}</strong>
+                </div>
+              </div>
+
+              <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem;">
+                <strong>Reason given by {{ ward.full_name.split(' ')[0] }}:</strong> {{ o.reason }}
+              </p>
+
+              <!-- Parent 1-Click Approve Form if Pending -->
+              {% if o.parent_approval == 'Pending' %}
+                <form method="POST" action="{{ url_for('parent_review_outpass', outpass_id=o.id) }}" style="background: #fff; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem; margin-top: 0.5rem;">
+                  <div style="font-weight: 600; font-size: 0.85rem; color: #854d0e; margin-bottom: 0.5rem;">
+                    👨‍👩‍👦 Authorize Leave for {{ ward.full_name }}:
+                  </div>
+                  <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                    <input type="text" name="parent_remarks" class="form-control" style="flex: 1; min-width: 250px;" 
+                           placeholder="Parent Remarks (e.g. Verified with child, permission granted)..." value="Permission granted by parent. Safe journey.">
+                    <button type="submit" name="decision" value="Approved" class="btn btn-sm btn-success">
+                      ✓ Approve Leave
+                    </button>
+                    <button type="submit" name="decision" value="Rejected" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to decline this leave request?');">
+                      ✕ Reject
+                    </button>
+                  </div>
+                </form>
+              {% elif o.parent_remarks %}
+                <div style="font-size: 0.85rem; padding: 0.45rem 0.75rem; background: #fefce8; border-radius: var(--radius-sm); color: #854d0e; margin-top: 0.5rem;">
+                  <strong>Your Consent Note:</strong> {{ o.parent_remarks }} &bull; {{ o.parent_action_at|format_datetime }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎫</div>
+          <p>No recent outpass applications filed by {{ ward.full_name }}.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Ward's Room & Roommates -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🛏️</span>
+          <span>Room Allotment & Roommates</span>
+        </div>
+        <a href="{{ url_for('parent_room') }}" class="btn btn-sm btn-secondary">Detailed Specs</a>
+      </div>
+
+      {% if allotment %}
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Room & Block</span>
+            <strong style="font-size: 1.1rem; color: #1e293b;">{{ allotment.room_number }} ({{ allotment.block }})</strong>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Room Type & Bed</span>
+            <strong style="font-size: 1.1rem; color: #1e293b;">{{ allotment.room_type }} &bull; Bed #{{ allotment.bed_number }}</strong>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Monthly Accommodation</span>
+            <strong style="font-size: 1.1rem; color: #047857;">₹{{ "{:,.0f}".format(allotment.monthly_rent) }} / mo</strong>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #334155;">Roommates in {{ allotment.room_number }}:</h4>
+        {% if roommates %}
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for rm in roommates %}
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                <div>
+                  <strong style="color: #0f172a;">{{ rm.full_name }}</strong>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem;">(Bed #{{ rm.bed_number }}, {{ rm.branch }})</span>
+                </div>
+                <div>
+                  <a href="tel:{{ rm.phone }}" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">
+                    📞 {{ rm.phone or 'Contact' }}
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Single resident or other beds currently vacant.</p>
+        {% endif %}
+      {% else %}
+        <p style="color: var(--text-muted); margin: 0;">Room allocation is currently in progress by the Chief Warden.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Curfew Attendance, Pending Fees & Quick Contacts -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Recent Curfew Attendance Box -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🕒</span>
+          <span>Night Roll Call Log</span>
+        </div>
+        <a href="{{ url_for('parent_attendance') }}" class="btn btn-sm btn-secondary">Full Log</a>
+      </div>
+
+      {% if recent_attendance %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for a in recent_attendance %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); background: #f8fafc; border: 1px solid var(--border-light);">
+              <div>
+                <strong style="font-size: 0.9rem; color: #1e293b;">{{ a.date|format_datetime('%d %b %Y') }}</strong>
+                <span style="font-size: 0.775rem; color: var(--text-muted); display: block;">Check-in: {{ a.check_in_time or 'Curfew' }}</span>
+              </div>
+              <span class="badge badge-{{ a.status|lower|replace(' ', '-') }}">{{ a.status }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">No attendance records logged yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Pending Fee Invoices Box -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>💳</span>
+          <span>Hostel Dues</span>
+        </div>
+        <a href="{{ url_for('parent_fees') }}" class="btn btn-sm btn-secondary">All Fees</a>
+      </div>
+
+      {% if pending_fees %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for f in pending_fees %}
+            <div style="padding: 0.85rem; border: 1px solid #fed7aa; background: #fffaf0; border-radius: var(--radius-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
+                <strong style="font-size: 0.9rem; color: #7c2d12;">{{ f.title }}</strong>
+                <strong style="color: #c2410c; font-size: 1rem;">₹{{ "{:,.0f}".format(f.amount) }}</strong>
+              </div>
+              <div style="font-size: 0.775rem; color: #9a3412; margin-bottom: 0.5rem;">
+                Due by: {{ f.due_date|format_datetime('%d %b %Y') }} &bull; {{ f.fee_type }}
+              </div>
+              <a href="{{ url_for('parent_fees') }}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+                Pay Dues Online &rarr;
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 1.5rem 0; color: #047857;">
+          <span style="font-size: 2rem; display: block; margin-bottom: 0.25rem;">✓</span>
+          <strong>All Hostel Fees are Clear!</strong>
+          <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0;">No pending fee invoices for {{ ward.full_name }}.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Hostel Administration Helpline Box -->
+    <div class="card" style="background: #f1f5f9; border: 1px solid #cbd5e1;">
+      <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #1e293b;">📞 Campus Emergency Helplines</h3>
+      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; color: #475569;">
+        <div><strong>Chief Warden Office:</strong> <a href="tel:+919811122334">+91 98111 22334</a></div>
+        <div><strong>24x7 Campus Security Gate:</strong> <a href="tel:+919811122335">+91 98111 22335</a></div>
+        <div><strong>Campus Medical Emergency:</strong> <a href="tel:+919811122999">+91 98111 22999</a></div>
+      </div>
+      <div style="margin-top: 1rem; border-top: 1px solid #cbd5e1; padding-top: 0.75rem;">
+        <a href="{{ url_for('parent_queries') }}" class="btn btn-sm btn-secondary" style="width: 100%; text-align: center;">
+          ✉️ Send Query to Warden
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

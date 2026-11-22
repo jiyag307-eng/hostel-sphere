@@ -225,6 +225,59 @@ a:hover {
   color: #1e40af;
 }
 
+.role-tag.parent {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-parent-approved {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-parent-pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badge-parent-rejected {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.badge-paid {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+.badge-overdue {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.badge-present {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+.badge-late-entry {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.badge-absent {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.badge-on-outpass {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
 /* Mobile Nav Toggle */
 .mobile-nav-toggle {
   display: none;

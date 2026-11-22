@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Night Curfew & Roll Call - HostelSphere Admin{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>🕒 Night Curfew & Biometric Roll Call</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      Verify 09:30 PM curfew compliance, record late arrivals, and monitor student security.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; align-items: center;">
+    <form method="POST" action="{{ url_for('admin_mark_all_present') }}">
+      <input type="hidden" name="date" value="{{ selected_date }}">
+      <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark all unmarked students as Present for {{ selected_date }}?');">
+        ✓ Mark Unmarked as Present
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Date Selector Card -->
+<div class="card" style="padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+  <form method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <span style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Select Roll Call Date:</span>
+    <input type="date" name="date" class="form-control" style="width: 180px; padding: 0.4rem 0.75rem;" 
+           value="{{ selected_date }}" onchange="this.form.submit()">
+    <button type="submit" class="btn btn-sm btn-secondary">Load Date</button>
+    <a href="{{ url_for('admin_attendance') }}" class="btn btn-sm btn-outline">Today</a>
+  </form>
+</div>
+
+<!-- Summary Metrics for Selected Date -->
+<div class="grid grid-cols-4" style="margin-bottom: 2rem;">
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--success);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Present Residents</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #047857; margin: 0.25rem 0;">
+      {{ counts.present }}
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Verified inside hostel</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--warning);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Late Curfew Entries</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #b45309; margin: 0.25rem 0;">
+      {{ counts.late }}
+    </div>
+    <span style="font-size: 0.8rem; color: #b45309;">Arrived after 09:30 PM</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">On Authorized Leave</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #1e40af; margin: 0.25rem 0;">
+      {{ counts.outpass }}
+    </div>
+    <span style="font-size: 0.8rem; color: #1e40af;">Pre-approved gate pass</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--danger);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Unaccounted / Absent</span>
+    <div style="font-size: 1.75rem; font-weight: 800; color: #b91c1c; margin: 0.25rem 0;">
+      {{ counts.absent }}
+    </div>
+    <span style="font-size: 0.8rem; color: #b91c1c;">Requires parental alert</span>
+  </div>
+</div>
+
+<!-- Student Roll Call Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📋</span>
+      <span>Roll Call Roster for {{ selected_date|format_datetime('%A, %d %B %Y') }}</span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">{{ roster|length }} Residents</span>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="table" style="width: 100%; text-align: left;">
+      <thead>
+        <tr>
+          <th>Resident Student</th>
+          <th>Room & Bed</th>
+          <th>Curfew Status</th>
+          <th>Time & Remarks</th>
+          <th>Update Attendance Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in roster %}
+          <tr>
+            <td>
+              <strong style="color: #0f172a; font-size: 0.95rem;">{{ s.full_name }}</strong>
+              <div style="font-size: 0.775rem; color: var(--text-muted); font-family: monospace;">
+                Roll: {{ s.username }} &bull; Ph: {{ s.phone }}
+              </div>
+            </td>
+            <td>
+              {% if s.room_number %}
+                <span style="font-weight: 600; color: #1e293b;">Room {{ s.room_number }}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">{{ s.block }} (Bed #{{ s.bed_number }})</span>
+              {% else %}
+                <span style="color: var(--text-muted);">Unallotted</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if s.att_status %}
+                <span class="badge badge-{{ s.att_status|lower|replace(' ', '-') }}">
+                  {{ s.att_status }}
+                </span>
+              {% else %}
+                <span class="badge" style="background: #f1f5f9; color: #64748b;">Not Logged</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-family: monospace; font-size: 0.85rem; color: #1e40af; font-weight: 600;">
+                {{ s.check_in_time or '--' }}
+              </span>
+              {% if s.remarks %}
+                <div style="font-size: 0.775rem; color: var(--text-muted);">{{ s.remarks }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_update_attendance') }}" style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                <input type="hidden" name="user_id" value="{{ s.id }}">
+                <input type="hidden" name="date" value="{{ selected_date }}">
+                <input type="hidden" name="remarks" value="{{ s.remarks or '' }}">
+                
+                <button type="submit" name="status" value="Present" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #047857; border-color: #047857;">
+                  Present
+                </button>
+                <button type="submit" name="status" value="Late Entry" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #b45309; border-color: #b45309;">
+                  Late
+                </button>
+                <button type="submit" name="status" value="On Outpass" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #1e40af; border-color: #1e40af;">
+                  Outpass
+                </button>
+                <button type="submit" name="status" value="Absent" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #b91c1c; border-color: #b91c1c;">
+                  Absent
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

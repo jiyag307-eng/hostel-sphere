@@ -1,6 +1,7 @@
 """
 Hostel Management System - Main Flask Application
 Developed with Python Flask, SQLite, and Jinja2.
+Supports Student Portal, Parent Portal, and Administrator Portal.
 """
 
 import os
@@ -11,7 +12,7 @@ from flask import (
     url_for, flash, session, g, abort, jsonify
 )
 from werkzeug.security import generate_password_hash, check_password_hash
-from database import get_db, close_connection, query_db, modify_db
+from database import get_db, close_connection, query_db, modify_db, upgrade_db
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'hostel_management_super_secret_key_2026')
@@ -23,20 +24,30 @@ app.teardown_appcontext(close_connection)
 # -------------------------------------------------------------
 @app.context_processor
 def inject_globals():
-    """Inject current user and current year into all templates."""
+    """Inject current user, pending parent outpasses count, and current year into all templates."""
     user = None
+    pending_parent_outpass_count = 0
+
     if 'user_id' in session:
         user = query_db("SELECT * FROM users WHERE id = ?", (session['user_id'],), one=True)
-    
+        if user and user['role'] == 'parent':
+            res = query_db("""
+                SELECT COUNT(*) as c FROM outpasses o
+                JOIN parent_students ps ON o.user_id = ps.student_id
+                WHERE ps.parent_id = ? AND o.parent_approval = 'Pending' AND o.status != 'Rejected'
+            """, (user['id'],), one=True)
+            pending_parent_outpass_count = res['c'] if res else 0
+
     # Days of week for mess navigation
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     today_name = datetime.datetime.now().strftime('%A')
-    
+
     return {
         'current_user': user,
         'current_year': datetime.datetime.now().year,
         'days_of_week': days,
-        'today_name': today_name
+        'today_name': today_name,
+        'pending_parent_outpass_count': pending_parent_outpass_count
     }
 
 
@@ -79,7 +90,7 @@ def time_ago(value):
 
 
 # -------------------------------------------------------------
-# Auth Decorators
+# Auth Decorators & Helpers
 # -------------------------------------------------------------
 def login_required(f):
     @wraps(f)
@@ -99,7 +110,7 @@ def admin_required(f):
             return redirect(url_for('login', next=request.path))
         if session.get('role') != 'admin':
             flash("Access denied: Administrative privileges required.", "danger")
-            return redirect(url_for('student_dashboard'))
+            return redirect(url_for('student_dashboard' if session.get('role') == 'student' else 'parent_dashboard'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -112,9 +123,39 @@ def student_required(f):
             return redirect(url_for('login', next=request.path))
         if session.get('role') != 'student':
             flash("Access denied: Student account required.", "danger")
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_dashboard' if session.get('role') == 'admin' else 'parent_dashboard'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def parent_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Parent login required.", "warning")
+            return redirect(url_for('login', next=request.path))
+        if session.get('role') != 'parent':
+            flash("Access denied: Parent account required.", "danger")
+            return redirect(url_for('admin_dashboard' if session.get('role') == 'admin' else 'student_dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def get_parent_wards(parent_id):
+    """Retrieve students linked to a parent account."""
+    return query_db("""
+        SELECT u.*, ps.relationship
+        FROM users u
+        JOIN parent_students ps ON u.id = ps.student_id
+        WHERE ps.parent_id = ?
+        ORDER BY u.full_name
+    """, (parent_id,))
+
+
+def get_primary_ward(parent_id):
+    """Retrieve primary student linked to a parent account."""
+    wards = get_parent_wards(parent_id)
+    return wards[0] if wards else None
 
 
 # -------------------------------------------------------------
@@ -124,7 +165,7 @@ def student_required(f):
 def index():
     """Landing page featuring overview, quick stats, notices, and today's mess menu."""
     today = datetime.datetime.now().strftime('%A')
-    
+
     # Fetch recent notices
     notices = query_db("""
         SELECT n.*, u.full_name as author_name
@@ -133,7 +174,7 @@ def index():
         ORDER BY n.is_pinned DESC, n.created_at DESC
         LIMIT 4
     """)
-    
+
     # Fetch today's meals
     today_meals = query_db("""
         SELECT * FROM mess_menu 
@@ -146,77 +187,80 @@ def index():
                 WHEN 'Dinner' THEN 4 
             END
     """, (today,))
-    
+
     # Hostel stats
     stats = {
         'total_rooms': query_db("SELECT COUNT(*) as c FROM rooms", one=True)['c'],
         'total_students': query_db("SELECT COUNT(*) as c FROM users WHERE role = 'student'", one=True)['c'],
         'resolved_complaints': query_db("SELECT COUNT(*) as c FROM complaints WHERE status = 'Resolved'", one=True)['c']
     }
-    
+
     return render_template('index.html', notices=notices, today_meals=today_meals, today=today, stats=stats)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """User login for both students and administrators."""
+    """Unified user login for Students, Parents, and Administrators."""
     if 'user_id' in session:
-        if session.get('role') == 'admin':
+        role = session.get('role')
+        if role == 'admin':
             return redirect(url_for('admin_dashboard'))
+        elif role == 'parent':
+            return redirect(url_for('parent_dashboard'))
         return redirect(url_for('student_dashboard'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        
+
         if not username or not password:
-            flash("Please enter both username/roll number and password.", "danger")
+            flash("Please enter your identifier (roll number / parent ID / email) and password.", "danger")
             return render_template('login.html', username=username)
 
-        user = query_db("SELECT * FROM users WHERE username = ? OR email = ?", (username, username), one=True)
-        
+        user = query_db("SELECT * FROM users WHERE username = ? OR email = ? OR phone = ?", (username, username, username), one=True)
+
         if user and check_password_hash(user['password_hash'], password):
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
             session['full_name'] = user['full_name']
-            
+
             flash(f"Welcome back, {user['full_name']}!", "success")
             next_page = request.args.get('next')
             if next_page and next_page.startswith('/'):
                 return redirect(next_page)
-            
+
             if user['role'] == 'admin':
                 return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'parent':
+                return redirect(url_for('parent_dashboard'))
             return redirect(url_for('student_dashboard'))
         else:
-            flash("Invalid credentials. Please verify your roll number/username and password.", "danger")
+            flash("Invalid credentials. Please verify your username / roll number and password.", "danger")
 
     return render_template('login.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """Student registration page."""
+    """Registration page for both Students and Parents."""
     if 'user_id' in session:
+        role = session.get('role')
+        if role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif role == 'parent':
+            return redirect(url_for('parent_dashboard'))
         return redirect(url_for('student_dashboard'))
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        account_type = request.form.get('account_type', 'student')
         full_name = request.form.get('full_name', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        phone = request.form.get('phone', '').strip()
-        guardian_name = request.form.get('guardian_name', '').strip()
-        guardian_phone = request.form.get('guardian_phone', '').strip()
-        branch = request.form.get('branch', '').strip()
-        semester = request.form.get('semester', 1)
-        gender = request.form.get('gender', 'Male')
 
-        # Validation
-        if not username or not full_name or not email or not password:
+        if not full_name or not email or not password:
             flash("Please fill in all required fields marked with *.", "danger")
             return render_template('register.html', form=request.form)
 
@@ -228,21 +272,78 @@ def register():
             flash("Password must be at least 6 characters long.", "danger")
             return render_template('register.html', form=request.form)
 
-        # Check existing roll number or email
-        existing_user = query_db("SELECT id FROM users WHERE username = ? OR email = ?", (username, email), one=True)
-        if existing_user:
-            flash("A student account with this Roll Number or Email already exists.", "warning")
-            return render_template('register.html', form=request.form)
+        # PARENT REGISTRATION
+        if account_type == 'parent':
+            ward_roll = request.form.get('ward_roll_number', '').strip()
+            relationship = request.form.get('relationship', 'Parent')
+            phone = request.form.get('parent_phone', '').strip()
 
-        # Create new student account
-        pw_hash = generate_password_hash(password)
-        modify_db("""
-            INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
-            VALUES (?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?)
-        """, (username, full_name, email, pw_hash, phone, guardian_name, guardian_phone, branch, semester, gender))
+            if not ward_roll:
+                flash("Please provide the university roll number of your child / ward.", "danger")
+                return render_template('register.html', form=request.form)
 
-        flash("Registration successful! You can now log in with your credentials.", "success")
-        return redirect(url_for('login'))
+            ward = query_db("SELECT * FROM users WHERE username = ? AND role = 'student'", (ward_roll,), one=True)
+            if not ward:
+                flash(f"No enrolled resident student found with Roll Number '{ward_roll}'. Please verify.", "warning")
+                return render_template('register.html', form=request.form)
+
+            # Generated parent username
+            username = f"parent_{ward_roll}"
+            existing_user = query_db("SELECT id FROM users WHERE username = ? OR email = ?", (username, email), one=True)
+            if existing_user:
+                flash("A parent account linked to this roll number or email already exists.", "warning")
+                return render_template('register.html', form=request.form)
+
+            pw_hash = generate_password_hash(password)
+            parent_id = modify_db("""
+                INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
+                VALUES (?, ?, ?, ?, 'parent', ?, ?, ?, 'Guardian', 0, 'Male')
+            """, (username, full_name, email, pw_hash, phone, full_name, phone))
+
+            modify_db("""
+                INSERT INTO parent_students (parent_id, student_id, relationship)
+                VALUES (?, ?, ?)
+            """, (parent_id, ward['id'], relationship))
+
+            # Update ward's guardian info if not set
+            if not ward['guardian_name'] or not ward['guardian_phone']:
+                modify_db("""
+                    UPDATE users 
+                    SET guardian_name = COALESCE(NULLIF(guardian_name, ''), ?), 
+                        guardian_phone = COALESCE(NULLIF(guardian_phone, ''), ?) 
+                    WHERE id = ?
+                """, (full_name, phone, ward['id']))
+
+            flash(f"Parent account registered successfully for {full_name} and linked to {ward['full_name']}! You can now log in.", "success")
+            return redirect(url_for('login'))
+
+        # STUDENT REGISTRATION
+        else:
+            username = request.form.get('username', '').strip()
+            phone = request.form.get('phone', '').strip()
+            guardian_name = request.form.get('guardian_name', '').strip()
+            guardian_phone = request.form.get('guardian_phone', '').strip()
+            branch = request.form.get('branch', '').strip()
+            semester = request.form.get('semester', 1)
+            gender = request.form.get('gender', 'Male')
+
+            if not username:
+                flash("University roll number is required for student registration.", "danger")
+                return render_template('register.html', form=request.form)
+
+            existing_user = query_db("SELECT id FROM users WHERE username = ? OR email = ?", (username, email), one=True)
+            if existing_user:
+                flash("A student account with this Roll Number or Email already exists.", "warning")
+                return render_template('register.html', form=request.form)
+
+            pw_hash = generate_password_hash(password)
+            modify_db("""
+                INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
+                VALUES (?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?)
+            """, (username, full_name, email, pw_hash, phone, guardian_name, guardian_phone, branch, semester, gender))
+
+            flash("Student registration successful! You can now log in with your credentials.", "success")
+            return redirect(url_for('login'))
 
     return render_template('register.html')
 
@@ -322,7 +423,7 @@ def mess_menu():
 def student_dashboard():
     """Personalized dashboard for logged-in students."""
     user_id = session['user_id']
-    
+
     # Room allotment details
     allotment = query_db("""
         SELECT ra.*, r.room_number, r.block, r.floor, r.room_type, r.monthly_rent, r.description as room_desc
@@ -330,7 +431,7 @@ def student_dashboard():
         JOIN rooms r ON ra.room_id = r.id
         WHERE ra.user_id = ? AND ra.status = 'Active'
     """, (user_id,), one=True)
-    
+
     roommates = []
     if allotment:
         roommates = query_db("""
@@ -367,7 +468,7 @@ def student_dashboard():
         SELECT * FROM outpasses
         WHERE user_id = ?
         ORDER BY created_at DESC
-        LIMIT 3
+        LIMIT 4
     """, (user_id,))
 
     # Recent pinned notices
@@ -377,6 +478,16 @@ def student_dashboard():
         LIMIT 3
     """)
 
+    # Fee pending summary
+    total_billed = query_db("SELECT COALESCE(SUM(amount), 0) as s FROM fees WHERE user_id = ?", (user_id,), one=True)['s']
+    total_paid = query_db("SELECT COALESCE(SUM(amount), 0) as s FROM fees WHERE user_id = ? AND status = 'Paid'", (user_id,), one=True)['s']
+    fee_pending = total_billed - total_paid
+
+    # Curfew attendance rate
+    total_att = query_db("SELECT COUNT(*) as c FROM attendance WHERE user_id = ?", (user_id,), one=True)['c']
+    present_att = query_db("SELECT COUNT(*) as c FROM attendance WHERE user_id = ? AND status IN ('Present', 'On Outpass')", (user_id,), one=True)['c']
+    attendance_rate = round((present_att / total_att * 100), 1) if total_att else 100.0
+
     return render_template('dashboard_student.html',
                            allotment=allotment,
                            roommates=roommates,
@@ -384,7 +495,9 @@ def student_dashboard():
                            today=today,
                            recent_complaints=recent_complaints,
                            recent_outpasses=recent_outpasses,
-                           pinned_notices=pinned_notices)
+                           pinned_notices=pinned_notices,
+                           fee_pending=fee_pending,
+                           attendance_rate=attendance_rate)
 
 
 @app.route('/student/complaints', methods=['GET', 'POST'])
@@ -392,8 +505,7 @@ def student_dashboard():
 def student_complaints():
     """List of complaints filed by the student + form to lodge a new complaint."""
     user_id = session['user_id']
-    
-    # Fetch student's room number for auto-fill
+
     user_room = query_db("""
         SELECT r.room_number 
         FROM room_allotments ra
@@ -447,10 +559,10 @@ def student_outpass():
             flash("All leave details are required to submit an outpass request.", "danger")
         else:
             modify_db("""
-                INSERT INTO outpasses (user_id, departure_time, expected_return, reason, destination, emergency_contact, status)
-                VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+                INSERT INTO outpasses (user_id, departure_time, expected_return, reason, destination, emergency_contact, parent_approval, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Pending')
             """, (user_id, departure_time, expected_return, reason, destination, emergency_contact))
-            flash("Outpass application submitted successfully. Warden will review your request.", "success")
+            flash("Outpass application submitted successfully! Your parent can now approve it online before Warden authorization.", "success")
             return redirect(url_for('student_outpass'))
 
     outpasses_list = query_db("""
@@ -469,9 +581,8 @@ def view_gate_pass(outpass_id):
     user_id = session['user_id']
     role = session.get('role')
 
-    # Security check: Only the student themselves or an admin can view the pass
     outpass = query_db("""
-        SELECT o.*, u.full_name, u.username as roll_number, u.branch, u.phone, u.guardian_phone,
+        SELECT o.*, u.full_name, u.username as roll_number, u.branch, u.phone, u.guardian_phone, u.guardian_name,
                r.room_number, r.block,
                w.full_name as reviewer_name
         FROM outpasses o
@@ -485,10 +596,62 @@ def view_gate_pass(outpass_id):
     if not outpass:
         abort(404)
 
-    if role != 'admin' and outpass['user_id'] != user_id:
+    is_parent_of_student = False
+    if role == 'parent':
+        is_parent_of_student = bool(query_db("""
+            SELECT id FROM parent_students WHERE parent_id = ? AND student_id = ?
+        """, (user_id, outpass['user_id']), one=True))
+
+    if role != 'admin' and outpass['user_id'] != user_id and not is_parent_of_student:
         abort(403)
 
     return render_template('gate_pass.html', outpass=outpass)
+
+
+@app.route('/student/fees')
+@student_required
+def student_fees():
+    """Student fee dues, invoices, and digital payment interface."""
+    user_id = session['user_id']
+    student = query_db("SELECT * FROM users WHERE id = ?", (user_id,), one=True)
+    fees_list = query_db("SELECT * FROM fees WHERE user_id = ? ORDER BY due_date DESC", (user_id,))
+
+    total_billed = sum(f['amount'] for f in fees_list)
+    total_paid = sum(f['amount'] for f in fees_list if f['status'] == 'Paid')
+    total_pending = total_billed - total_paid
+
+    summary = {
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_pending': total_pending
+    }
+    return render_template('fees.html', fees=fees_list, student=student, summary=summary)
+
+
+@app.route('/student/attendance')
+@student_required
+def student_attendance():
+    """Student night curfew and biometric roll call log."""
+    user_id = session['user_id']
+    student = query_db("SELECT * FROM users WHERE id = ?", (user_id,), one=True)
+    records = query_db("SELECT * FROM attendance WHERE user_id = ? ORDER BY date DESC", (user_id,))
+
+    total = len(records)
+    present = sum(1 for r in records if r['status'] == 'Present')
+    late = sum(1 for r in records if r['status'] == 'Late Entry')
+    outpass = sum(1 for r in records if r['status'] == 'On Outpass')
+    absent = sum(1 for r in records if r['status'] == 'Absent')
+    rate = round(((present + outpass) / total * 100), 1) if total else 100.0
+
+    stats = {
+        'total_days': total,
+        'present_count': present,
+        'late_count': late,
+        'outpass_count': outpass,
+        'absent_count': absent,
+        'attendance_rate': rate
+    }
+    return render_template('attendance.html', student=student, records=records, stats=stats)
 
 
 @app.route('/student/room')
@@ -496,7 +659,7 @@ def view_gate_pass(outpass_id):
 def student_room():
     """View allocated room details, specifications, and roommate contacts."""
     user_id = session['user_id']
-    
+
     allotment = query_db("""
         SELECT ra.*, r.room_number, r.block, r.floor, r.capacity, r.room_type, r.monthly_rent, r.description, r.status as room_status
         FROM room_allotments ra
@@ -519,7 +682,7 @@ def student_room():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    """User profile management (student or admin)."""
+    """User profile management (student, parent, or admin)."""
     user_id = session['user_id']
     user = query_db("SELECT * FROM users WHERE id = ?", (user_id,), one=True)
 
@@ -537,7 +700,7 @@ def profile():
             if len(new_password) < 6:
                 flash("Password must be at least 6 characters.", "danger")
                 return redirect(url_for('profile'))
-            
+
             modify_db("""
                 UPDATE users
                 SET phone = ?, guardian_name = ?, guardian_phone = ?, password_hash = ?
@@ -558,13 +721,362 @@ def profile():
 
 
 # -------------------------------------------------------------
+# Parent Portal Routes
+# -------------------------------------------------------------
+@app.route('/parent/dashboard')
+@parent_required
+def parent_dashboard():
+    """Parent executive portal: ward room, outpass approvals, fees, and attendance."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        flash("No ward is currently linked to your parent account.", "warning")
+        return render_template('dashboard_parent.html', ward={}, allotment=None, roommates=[],
+                               recent_outpasses=[], pending_outpasses=[],
+                               fee_summary={'pending_amount': 0},
+                               attendance_stats={'rate': 100}, recent_attendance=[],
+                               pending_fees=[], open_queries_count=0)
+
+    ward_id = ward['id']
+
+    # Ward allotment & roommates
+    allotment = query_db("""
+        SELECT ra.*, r.room_number, r.block, r.floor, r.capacity, r.room_type, r.monthly_rent, r.description, r.status
+        FROM room_allotments ra
+        JOIN rooms r ON ra.room_id = r.id
+        WHERE ra.user_id = ? AND ra.status = 'Active'
+    """, (ward_id,), one=True)
+
+    roommates = []
+    if allotment:
+        roommates = query_db("""
+            SELECT u.full_name, u.username, u.branch, u.phone, u.semester, ra.bed_number
+            FROM room_allotments ra
+            JOIN users u ON ra.user_id = u.id
+            WHERE ra.room_id = ? AND ra.status = 'Active' AND ra.user_id != ?
+        """, (allotment['room_id'], ward_id))
+
+    # Ward outpasses
+    recent_outpasses = query_db("""
+        SELECT * FROM outpasses
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (ward_id,))
+
+    pending_outpasses = [o for o in recent_outpasses if o['parent_approval'] == 'Pending' and o['status'] != 'Rejected']
+
+    # Fees summary
+    fees_list = query_db("SELECT * FROM fees WHERE user_id = ?", (ward_id,))
+    total_billed = sum(f['amount'] for f in fees_list)
+    total_paid = sum(f['amount'] for f in fees_list if f['status'] == 'Paid')
+    pending_amount = total_billed - total_paid
+    fee_summary = {
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'pending_amount': pending_amount
+    }
+    pending_fees = [f for f in fees_list if f['status'] != 'Paid']
+
+    # Attendance stats
+    att_records = query_db("SELECT * FROM attendance WHERE user_id = ? ORDER BY date DESC LIMIT 5", (ward_id,))
+    total_att = query_db("SELECT COUNT(*) as c FROM attendance WHERE user_id = ?", (ward_id,), one=True)['c']
+    present_att = query_db("SELECT COUNT(*) as c FROM attendance WHERE user_id = ? AND status IN ('Present', 'On Outpass')", (ward_id,), one=True)['c']
+    att_rate = round((present_att / total_att * 100), 1) if total_att else 100.0
+    attendance_stats = {'rate': att_rate}
+
+    # Open queries
+    open_queries_count = query_db("""
+        SELECT COUNT(*) as c FROM parent_queries
+        WHERE parent_id = ? AND status = 'Pending'
+    """, (parent_id,), one=True)['c']
+
+    return render_template('dashboard_parent.html',
+                           ward=ward,
+                           allotment=allotment,
+                           roommates=roommates,
+                           recent_outpasses=recent_outpasses,
+                           pending_outpasses=pending_outpasses,
+                           fee_summary=fee_summary,
+                           pending_fees=pending_fees,
+                           attendance_stats=attendance_stats,
+                           recent_attendance=att_records,
+                           open_queries_count=open_queries_count)
+
+
+@app.route('/parent/outpasses')
+@parent_required
+def parent_outpasses():
+    """Parent outpass approval console."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(404)
+
+    status_filter = request.args.get('filter', 'All')
+    sql = "SELECT * FROM outpasses WHERE user_id = ?"
+    params = [ward['id']]
+
+    if status_filter == 'Pending Parent':
+        sql += " AND parent_approval = 'Pending' AND status != 'Rejected'"
+    elif status_filter == 'Approved':
+        sql += " AND parent_approval = 'Approved'"
+    elif status_filter == 'Rejected':
+        sql += " AND (parent_approval = 'Rejected' OR status = 'Rejected')"
+    elif status_filter == 'Returned':
+        sql += " AND status = 'Returned'"
+
+    sql += " ORDER BY created_at DESC"
+    outpasses_list = query_db(sql, params)
+
+    return render_template('parent_outpasses.html',
+                           outpasses=outpasses_list,
+                           ward=ward,
+                           selected_filter=status_filter)
+
+
+@app.route('/parent/outpass/<int:outpass_id>/review', methods=['POST'])
+@parent_required
+def parent_review_outpass(outpass_id):
+    """Parent approves or declines outpass for their ward."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(403)
+
+    outpass = query_db("SELECT * FROM outpasses WHERE id = ? AND user_id = ?", (outpass_id, ward['id']), one=True)
+    if not outpass:
+        abort(404)
+
+    decision = request.form.get('decision')  # 'Approved' or 'Rejected'
+    remarks = request.form.get('parent_remarks', '').strip()
+
+    if decision not in ('Approved', 'Rejected'):
+        flash("Invalid decision.", "danger")
+        return redirect(url_for('parent_outpasses'))
+
+    if decision == 'Approved':
+        modify_db("""
+            UPDATE outpasses
+            SET parent_approval = 'Approved', parent_remarks = ?, parent_action_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (remarks or 'Parental consent granted.', outpass_id))
+        flash(f"Outpass #{outpass_id} approved by parent! It has been submitted to the Chief Warden for gate clearance.", "success")
+    else:
+        modify_db("""
+            UPDATE outpasses
+            SET parent_approval = 'Rejected', status = 'Rejected', parent_remarks = ?, parent_action_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (remarks or 'Declined by parent.', outpass_id))
+        flash(f"Outpass #{outpass_id} declined by parent.", "warning")
+
+    return redirect(request.referrer or url_for('parent_outpasses'))
+
+
+@app.route('/parent/fees')
+@parent_required
+def parent_fees():
+    """Parent view of ward's fees & online dues payment."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(404)
+
+    fees_list = query_db("SELECT * FROM fees WHERE user_id = ? ORDER BY due_date DESC", (ward['id'],))
+    total_billed = sum(f['amount'] for f in fees_list)
+    total_paid = sum(f['amount'] for f in fees_list if f['status'] == 'Paid')
+    total_pending = total_billed - total_paid
+
+    summary = {
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_pending': total_pending
+    }
+    return render_template('fees.html', fees=fees_list, student=ward, summary=summary)
+
+
+@app.route('/parent/attendance')
+@parent_required
+def parent_attendance():
+    """Parent view of ward's curfew attendance records."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(404)
+
+    records = query_db("SELECT * FROM attendance WHERE user_id = ? ORDER BY date DESC", (ward['id'],))
+    total = len(records)
+    present = sum(1 for r in records if r['status'] == 'Present')
+    late = sum(1 for r in records if r['status'] == 'Late Entry')
+    outpass = sum(1 for r in records if r['status'] == 'On Outpass')
+    absent = sum(1 for r in records if r['status'] == 'Absent')
+    rate = round(((present + outpass) / total * 100), 1) if total else 100.0
+
+    stats = {
+        'total_days': total,
+        'present_count': present,
+        'late_count': late,
+        'outpass_count': outpass,
+        'absent_count': absent,
+        'attendance_rate': rate
+    }
+    return render_template('attendance.html', student=ward, records=records, stats=stats)
+
+
+@app.route('/parent/queries', methods=['GET', 'POST'])
+@parent_required
+def parent_queries():
+    """Parent communication desk to inquire with the Warden."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(404)
+
+    if request.method == 'POST':
+        category = request.form.get('category', 'General')
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
+        if not subject or not message:
+            flash("Please provide both subject and message details.", "danger")
+        else:
+            modify_db("""
+                INSERT INTO parent_queries (parent_id, student_id, category, subject, message, status)
+                VALUES (?, ?, ?, ?, ?, 'Pending')
+            """, (parent_id, ward['id'], category, subject, message))
+            flash("Your inquiry has been submitted to the Chief Warden. A response will be posted here.", "success")
+            return redirect(url_for('parent_queries'))
+
+    queries_list = query_db("""
+        SELECT * FROM parent_queries
+        WHERE parent_id = ?
+        ORDER BY created_at DESC
+    """, (parent_id,))
+
+    return render_template('parent_queries.html', queries=queries_list, ward=ward)
+
+
+@app.route('/parent/room')
+@parent_required
+def parent_room():
+    """Parent view of ward's room specs and roommates."""
+    parent_id = session['user_id']
+    ward = get_primary_ward(parent_id)
+    if not ward:
+        abort(404)
+
+    allotment = query_db("""
+        SELECT ra.*, r.room_number, r.block, r.floor, r.capacity, r.room_type, r.monthly_rent, r.description, r.status
+        FROM room_allotments ra
+        JOIN rooms r ON ra.room_id = r.id
+        WHERE ra.user_id = ? AND ra.status = 'Active'
+    """, (ward['id'],), one=True)
+
+    roommates = []
+    complaints = []
+    if allotment:
+        roommates = query_db("""
+            SELECT u.full_name, u.username, u.email, u.phone, u.branch, u.semester, ra.bed_number
+            FROM room_allotments ra
+            JOIN users u ON ra.user_id = u.id
+            WHERE ra.room_id = ? AND ra.status = 'Active' AND ra.user_id != ?
+        """, (allotment['room_id'], ward['id']))
+
+        complaints = query_db("""
+            SELECT * FROM complaints
+            WHERE room_number = ?
+            ORDER BY created_at DESC
+            LIMIT 3
+        """, (allotment['room_number'],))
+
+    return render_template('parent_room.html', allotment=allotment, roommates=roommates, complaints=complaints, ward=ward)
+
+
+# -------------------------------------------------------------
+# Common Fee & Payment Routes
+# -------------------------------------------------------------
+@app.route('/fees/<int:fee_id>/pay', methods=['POST'])
+@login_required
+def pay_fee(fee_id):
+    """Simulated online payment gateway for hostel dues."""
+    user_id = session['user_id']
+    role = session.get('role')
+
+    fee = query_db("SELECT * FROM fees WHERE id = ?", (fee_id,), one=True)
+    if not fee:
+        abort(404)
+
+    # Permission check: student owner or linked parent
+    if role == 'student' and fee['user_id'] != user_id:
+        abort(403)
+    elif role == 'parent':
+        is_ward = query_db("SELECT id FROM parent_students WHERE parent_id = ? AND student_id = ?",
+                           (user_id, fee['user_id']), one=True)
+        if not is_ward:
+            abort(403)
+
+    payment_method = request.form.get('payment_method', 'Online')
+    txn_ref = f"TXN{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+    receipt_no = f"REC-2026-{fee_id:04d}"
+
+    modify_db("""
+        UPDATE fees
+        SET status = 'Paid', paid_date = CURRENT_TIMESTAMP, payment_method = ?, transaction_ref = ?, receipt_number = ?
+        WHERE id = ?
+    """, (payment_method, txn_ref, receipt_no, fee_id))
+
+    flash(f"Payment of ₹{fee['amount']:,.0f} verified successfully! Official receipt #{receipt_no} generated.", "success")
+    return redirect(request.referrer or url_for('parent_fees' if role == 'parent' else 'student_fees'))
+
+
+@app.route('/fees/<int:fee_id>/receipt')
+@login_required
+def view_fee_receipt(fee_id):
+    """Printable official fee payment receipt."""
+    user_id = session['user_id']
+    role = session.get('role')
+
+    fee = query_db("""
+        SELECT f.*, u.full_name, u.username, u.branch, u.semester,
+               r.room_number, r.block, ra.bed_number
+        FROM fees f
+        JOIN users u ON f.user_id = u.id
+        LEFT JOIN room_allotments ra ON ra.user_id = u.id AND ra.status = 'Active'
+        LEFT JOIN rooms r ON ra.room_id = r.id
+        WHERE f.id = ?
+    """, (fee_id,), one=True)
+
+    if not fee:
+        abort(404)
+
+    if role == 'student' and fee['user_id'] != user_id:
+        abort(403)
+    elif role == 'parent':
+        is_ward = query_db("SELECT id FROM parent_students WHERE parent_id = ? AND student_id = ?",
+                           (user_id, fee['user_id']), one=True)
+        if not is_ward:
+            abort(403)
+
+    student = {
+        'full_name': fee['full_name'],
+        'username': fee['username'],
+        'branch': fee['branch'],
+        'semester': fee['semester'],
+        'room_number': fee['room_number'],
+        'block': fee['block'],
+        'bed_number': fee['bed_number']
+    }
+
+    return render_template('fee_receipt.html', fee=fee, student=student)
+
+
+# -------------------------------------------------------------
 # Administrator Portal Routes
 # -------------------------------------------------------------
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
     """Administrator executive dashboard with live metrics and pending approvals."""
-    # Summary Metrics
     total_students = query_db("SELECT COUNT(*) as c FROM users WHERE role = 'student'", one=True)['c']
     total_rooms = query_db("SELECT COUNT(*) as c FROM rooms", one=True)['c']
     occupied_beds = query_db("SELECT COUNT(*) as c FROM room_allotments WHERE status = 'Active'", one=True)['c']
@@ -575,7 +1087,10 @@ def admin_dashboard():
     pending_outpasses = query_db("SELECT COUNT(*) as c FROM outpasses WHERE status = 'Pending'", one=True)['c']
     total_notices = query_db("SELECT COUNT(*) as c FROM notices", one=True)['c']
 
-    # Urgent / Pending items
+    total_fee_collected = query_db("SELECT COALESCE(SUM(amount), 0) as s FROM fees WHERE status = 'Paid'", one=True)['s']
+    pending_parent_queries = query_db("SELECT COUNT(*) as c FROM parent_queries WHERE status = 'Pending'", one=True)['c']
+
+    # Urgent / Pending complaints
     recent_complaints = query_db("""
         SELECT c.*, u.full_name as student_name, u.username as roll_number
         FROM complaints c
@@ -591,6 +1106,7 @@ def admin_dashboard():
         LIMIT 5
     """)
 
+    # Pending outpasses (includes parent_approval status)
     recent_outpasses = query_db("""
         SELECT o.*, u.full_name as student_name, u.username as roll_number, r.room_number
         FROM outpasses o
@@ -610,7 +1126,9 @@ def admin_dashboard():
         'occupancy_pct': occupancy_pct,
         'pending_complaints': pending_complaints,
         'pending_outpasses': pending_outpasses,
-        'total_notices': total_notices
+        'total_notices': total_notices,
+        'total_fee_collected': total_fee_collected,
+        'pending_parent_queries': pending_parent_queries
     }
 
     return render_template('dashboard_admin.html',
@@ -812,7 +1330,7 @@ def admin_update_complaint(complaint_id):
 @app.route('/admin/outpass')
 @admin_required
 def admin_outpass():
-    """Leave & Outpass management console."""
+    """Leave & Outpass management console with parent consent details."""
     status_filter = request.args.get('status', 'Pending')
 
     sql = """
@@ -871,6 +1389,204 @@ def admin_mark_returned(outpass_id):
 
     flash(f"Student return recorded for Outpass #{outpass_id}.", "info")
     return redirect(url_for('admin_outpass', status='All'))
+
+
+# --- Admin Fees & Billing Management ---
+@app.route('/admin/fees', methods=['GET', 'POST'])
+@admin_required
+def admin_fees():
+    """Fee management, collections tracking, and bill issuance."""
+    if request.method == 'POST':
+        student_id = request.form.get('student_id')
+        title = request.form.get('title', '').strip()
+        fee_type = request.form.get('fee_type', 'Hostel Rent')
+        amount = request.form.get('amount', type=float)
+        due_date = request.form.get('due_date', '').strip()
+
+        if not title or not amount or not due_date:
+            flash("Please provide title, amount, and due date.", "danger")
+        else:
+            if student_id == 'all':
+                students = query_db("SELECT id FROM users WHERE role = 'student'")
+                for s in students:
+                    modify_db("""
+                        INSERT INTO fees (user_id, title, fee_type, amount, due_date, status)
+                        VALUES (?, ?, ?, ?, ?, 'Pending')
+                    """, (s['id'], title, fee_type, amount, due_date))
+                flash(f"Fee bill '{title}' issued to all {len(students)} students.", "success")
+            else:
+                modify_db("""
+                    INSERT INTO fees (user_id, title, fee_type, amount, due_date, status)
+                    VALUES (?, ?, ?, ?, ?, 'Pending')
+                """, (student_id, title, fee_type, amount, due_date))
+                flash(f"Fee bill '{title}' issued to student.", "success")
+        return redirect(url_for('admin_fees'))
+
+    status_filter = request.args.get('status', 'All')
+    search = request.args.get('search', '').strip()
+
+    sql = """
+        SELECT f.*, u.full_name as student_name, u.username as roll_number,
+               r.room_number
+        FROM fees f
+        JOIN users u ON f.user_id = u.id
+        LEFT JOIN room_allotments ra ON ra.user_id = u.id AND ra.status = 'Active'
+        LEFT JOIN rooms r ON ra.room_id = r.id
+        WHERE 1=1
+    """
+    params = []
+    if status_filter != 'All':
+        sql += " AND f.status = ?"
+        params.append(status_filter)
+    if search:
+        sql += " AND (u.full_name LIKE ? OR u.username LIKE ? OR f.title LIKE ?)"
+        wildcard = f"%{search}%"
+        params.extend([wildcard, wildcard, wildcard])
+
+    sql += " ORDER BY f.due_date DESC, f.created_at DESC"
+    fees_list = query_db(sql, params)
+
+    total_billed = query_db("SELECT COALESCE(SUM(amount), 0) as s FROM fees", one=True)['s']
+    total_paid = query_db("SELECT COALESCE(SUM(amount), 0) as s FROM fees WHERE status = 'Paid'", one=True)['s']
+    total_pending = total_billed - total_paid
+    collection_rate = round((total_paid / total_billed * 100), 1) if total_billed else 0
+
+    stats = {
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_pending': total_pending,
+        'collection_rate': collection_rate
+    }
+
+    all_students = query_db("SELECT id, full_name, username FROM users WHERE role = 'student' ORDER BY full_name")
+
+    return render_template('admin_fees.html', fees=fees_list, stats=stats, students=all_students,
+                           selected_status=status_filter, search=search)
+
+
+# --- Admin Attendance & Roll Call Management ---
+@app.route('/admin/attendance')
+@admin_required
+def admin_attendance():
+    """Daily night curfew roll call dashboard."""
+    selected_date = request.args.get('date', datetime.date.today().isoformat())
+
+    roster = query_db("""
+        SELECT u.id, u.full_name, u.username, u.phone,
+               r.room_number, r.block, ra.bed_number,
+               a.status as att_status, a.check_in_time, a.remarks
+        FROM users u
+        LEFT JOIN room_allotments ra ON u.id = ra.user_id AND ra.status = 'Active'
+        LEFT JOIN rooms r ON ra.room_id = r.id
+        LEFT JOIN attendance a ON a.user_id = u.id AND a.date = ?
+        WHERE u.role = 'student'
+        ORDER BY r.block, r.room_number, u.full_name
+    """, (selected_date,))
+
+    counts = {
+        'present': sum(1 for s in roster if s['att_status'] == 'Present'),
+        'late': sum(1 for s in roster if s['att_status'] == 'Late Entry'),
+        'outpass': sum(1 for s in roster if s['att_status'] == 'On Outpass'),
+        'absent': sum(1 for s in roster if s['att_status'] == 'Absent')
+    }
+
+    return render_template('admin_attendance.html', roster=roster, selected_date=selected_date, counts=counts)
+
+
+@app.route('/admin/attendance/update', methods=['POST'])
+@admin_required
+def admin_update_attendance():
+    """Update roll call status for an individual student."""
+    user_id = request.form.get('user_id', type=int)
+    date = request.form.get('date')
+    status = request.form.get('status')
+    remarks = request.form.get('remarks', '')
+
+    check_in_time = datetime.datetime.now().strftime('%H:%M') if status in ('Present', 'Late Entry') else status
+
+    modify_db("""
+        INSERT INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, date) DO UPDATE SET
+            status = excluded.status,
+            check_in_time = excluded.check_in_time,
+            remarks = excluded.remarks,
+            marked_by = excluded.marked_by
+    """, (user_id, date, status, check_in_time, remarks, session['user_id']))
+
+    flash(f"Curfew attendance updated to '{status}'.", "success")
+    return redirect(url_for('admin_attendance', date=date))
+
+
+@app.route('/admin/attendance/mark-all-present', methods=['POST'])
+@admin_required
+def admin_mark_all_present():
+    """Bulk mark all unrecorded students as Present."""
+    date = request.form.get('date', datetime.date.today().isoformat())
+    admin_id = session['user_id']
+    check_in_time = "21:15"
+
+    students = query_db("""
+        SELECT u.id FROM users u
+        WHERE u.role = 'student'
+          AND u.id NOT IN (SELECT user_id FROM attendance WHERE date = ?)
+    """, (date,))
+
+    for s in students:
+        modify_db("""
+            INSERT INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, 'Present', ?, 'Curfew roll call verified', ?)
+        """, (s['id'], date, check_in_time, admin_id))
+
+    flash(f"Marked {len(students)} student(s) as Present for {date}.", "success")
+    return redirect(url_for('admin_attendance', date=date))
+
+
+# --- Admin Parent Communications ---
+@app.route('/admin/parent-queries')
+@admin_required
+def admin_parent_queries():
+    """Review inquiries and messages submitted by guardians."""
+    status_filter = request.args.get('status', 'Pending')
+
+    sql = """
+        SELECT pq.*, p.full_name as parent_name, p.phone as parent_phone,
+               u.full_name as student_name, u.username as roll_number,
+               r.room_number
+        FROM parent_queries pq
+        JOIN users p ON pq.parent_id = p.id
+        JOIN users u ON pq.student_id = u.id
+        LEFT JOIN room_allotments ra ON ra.user_id = u.id AND ra.status = 'Active'
+        LEFT JOIN rooms r ON ra.room_id = r.id
+        WHERE 1=1
+    """
+    params = []
+    if status_filter != 'All':
+        sql += " AND pq.status = ?"
+        params.append(status_filter)
+
+    sql += " ORDER BY pq.created_at DESC"
+    queries_list = query_db(sql, params)
+
+    return render_template('admin_parent_queries.html', queries=queries_list, selected_status=status_filter)
+
+
+@app.route('/admin/parent-queries/<int:query_id>/reply', methods=['POST'])
+@admin_required
+def admin_reply_query(query_id):
+    """Chief Warden response to parent inquiry."""
+    reply = request.form.get('admin_reply', '').strip()
+    if not reply:
+        flash("Reply content cannot be empty.", "danger")
+    else:
+        modify_db("""
+            UPDATE parent_queries
+            SET admin_reply = ?, status = 'Resolved', replied_by = ?, replied_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (reply, session['user_id'], query_id))
+        flash(f"Response sent to parent. Inquiry #{query_id} resolved.", "success")
+
+    return redirect(url_for('admin_parent_queries'))
 
 
 # --- Admin Rooms & Allotment Management ---
@@ -1052,7 +1768,9 @@ if __name__ == '__main__':
     if not os.path.exists('hostel.db'):
         import seed_data
         seed_data.seed()
-    
+    else:
+        upgrade_db()
+
     # Run development server
     port = int(os.environ.get('PORT', 5001))
     print(f"Hostel Management System running on http://127.0.0.1:{port}")

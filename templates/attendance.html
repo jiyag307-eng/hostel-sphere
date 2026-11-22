@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Curfew & Attendance Log - HostelSphere{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>🕒 Night Curfew & Roll Call Attendance</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      {% if current_user.role == 'parent' %}
+        Daily biometric gate check-in & night curfew log for your ward <strong>{{ student.full_name }}</strong>.
+      {% else %}
+        Review your biometric security check-in records and hostel curfew compliance.
+      {% endif %}
+    </p>
+  </div>
+  {% if current_user.role == 'parent' %}
+    <a href="{{ url_for('parent_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Parent Dashboard</a>
+  {% else %}
+    <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Student Dashboard</a>
+  {% endif %}
+</div>
+
+<!-- Curfew Rule Alert Callout -->
+<div class="alert alert-info" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+  <span style="font-size: 1.5rem;">ℹ️</span>
+  <div style="font-size: 0.875rem;">
+    <strong>Campus Curfew Policy:</strong> Main entry gates close strictly at <strong>09:30 PM</strong>. Any entry after 09:30 PM is flagged as <em>Late Entry</em> and reported to parents. Approved outpass holders are exempted until their permitted return deadline.
+  </div>
+</div>
+
+<!-- Metric Cards -->
+<div class="grid grid-cols-4" style="margin-bottom: 2rem;">
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Attendance Rate</span>
+    <div style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+      {{ stats.attendance_rate }}%
+    </div>
+    <span style="font-size: 0.8rem; color: #047857; font-weight: 600;">{{ stats.present_count }} Days Present</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--warning);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Late Check-ins</span>
+    <div style="font-size: 1.85rem; font-weight: 800; color: #b45309; margin: 0.25rem 0;">
+      {{ stats.late_count }}
+    </div>
+    <span style="font-size: 0.8rem; color: #b45309;">Arrivals after 09:30 PM</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Authorized Leave</span>
+    <div style="font-size: 1.85rem; font-weight: 800; color: #1e40af; margin: 0.25rem 0;">
+      {{ stats.outpass_count }}
+    </div>
+    <span style="font-size: 0.8rem; color: #1e40af;">Days on Approved Outpass</span>
+  </div>
+
+  <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--danger);">
+    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Unaccounted Absent</span>
+    <div style="font-size: 1.85rem; font-weight: 800; color: #b91c1c; margin: 0.25rem 0;">
+      {{ stats.absent_count }}
+    </div>
+    <span style="font-size: 0.8rem; color: #b91c1c;">Disciplinary flags</span>
+  </div>
+</div>
+
+<!-- Attendance Log Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📅</span>
+      <span>Daily Roll Call History</span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">
+      Resident: {{ student.full_name }} ({{ student.username }})
+    </span>
+  </div>
+
+  {% if records %}
+    <div style="overflow-x: auto;">
+      <table class="table" style="width: 100%; text-align: left;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Check-in Time</th>
+            <th>Curfew Status</th>
+            <th>Gate / Warden Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+            <tr>
+              <td>
+                <strong style="color: #0f172a; font-size: 0.95rem;">{{ r.date|format_datetime('%A, %d %b %Y') }}</strong>
+              </td>
+              <td>
+                <span style="font-family: monospace; font-size: 0.95rem; font-weight: 600; color: #1e40af;">
+                  {{ r.check_in_time or '--' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-{{ r.status|lower|replace(' ', '-') }}">
+                  {{ r.status }}
+                </span>
+              </td>
+              <td style="color: #475569; font-size: 0.875rem;">
+                {{ r.remarks or 'Regular curfew verification verified.' }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">🕒</div>
+      <h3>No Attendance Records Yet</h3>
+      <p style="margin: 0;">Attendance records for this resident will appear here daily.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -11,8 +11,9 @@
       Roll No: <strong>{{ current_user.username }}</strong> &bull; {{ current_user.branch }} (Sem {{ current_user.semester }})
     </p>
   </div>
-  <div style="display: flex; gap: 0.75rem;">
-    <a href="{{ url_for('student_complaints') }}" class="btn btn-secondary">🛠️ Raise Complaint</a>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="{{ url_for('student_fees') }}" class="btn btn-outline">💳 Fee Dues</a>
+    <a href="{{ url_for('student_attendance') }}" class="btn btn-secondary">🕒 Attendance</a>
     <a href="{{ url_for('student_outpass') }}" class="btn btn-primary">🎫 Request Outpass</a>
   </div>
 </div>
@@ -32,30 +33,32 @@
     </div>
   </div>
 
+  <!-- Fee Dues Status Box -->
+  <div class="stat-card">
+    <div class="stat-icon amber">💳</div>
+    <div>
+      <div class="stat-val">
+        ₹{{ "{:,.0f}".format(fee_pending|default(0)) }}
+      </div>
+      <div class="stat-lbl">Pending Fee Balance</div>
+    </div>
+  </div>
+
+  <!-- Attendance Box -->
+  <div class="stat-card">
+    <div class="stat-icon green">🕒</div>
+    <div>
+      <div class="stat-val">{{ attendance_rate|default(100) }}%</div>
+      <div class="stat-lbl">Curfew Compliance</div>
+    </div>
+  </div>
+
   <!-- Active Outpass Box -->
   <div class="stat-card">
     <div class="stat-icon purple">🎫</div>
     <div>
       <div class="stat-val">{{ recent_outpasses|length }}</div>
-      <div class="stat-lbl">Outpass Applications</div>
-    </div>
-  </div>
-
-  <!-- Active Complaints Box -->
-  <div class="stat-card">
-    <div class="stat-icon amber">🛠️</div>
-    <div>
-      <div class="stat-val">{{ recent_complaints|length }}</div>
-      <div class="stat-lbl">Maintenance Tickets</div>
-    </div>
-  </div>
-
-  <!-- Today's Mess Box -->
-  <div class="stat-card">
-    <div class="stat-icon green">🍲</div>
-    <div>
-      <div class="stat-val" style="font-size: 1.25rem;">{{ today }}</div>
-      <div class="stat-lbl">{{ today_meals|length }} Meals Scheduled</div>
+      <div class="stat-lbl">Outpass Requests</div>
     </div>
   </div>
 </div>
@@ -201,7 +204,8 @@
             <tr>
               <th>Destination</th>
               <th>Departure</th>
-              <th>Status</th>
+              <th>Parent Consent</th>
+              <th>Warden Status</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -214,6 +218,15 @@
                 </td>
                 <td style="font-size: 0.8rem; white-space: nowrap;">
                   {{ o.departure_time|format_datetime('%d %b, %I:%M %p') }}
+                </td>
+                <td>
+                  {% if o.parent_approval == 'Approved' %}
+                    <span class="badge badge-parent-approved">✓ Approved</span>
+                  {% elif o.parent_approval == 'Rejected' %}
+                    <span class="badge badge-parent-rejected">✕ Rejected</span>
+                  {% else %}
+                    <span class="badge badge-parent-pending">⏳ Pending</span>
+                  {% endif %}
                 </td>
                 <td><span class="badge badge-{{ o.status|lower }}">{{ o.status }}</span></td>
                 <td>

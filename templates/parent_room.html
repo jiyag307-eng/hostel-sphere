@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Ward Room Details - Parent Portal{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1>🛏️ Ward Room & Living Quarters</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      Accommodation specifications and roommate directory for <strong>{{ ward.full_name }}</strong>.
+    </p>
+  </div>
+  <a href="{{ url_for('parent_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Parent Dashboard</a>
+</div>
+
+{% if allotment %}
+  <div class="grid grid-cols-3">
+    <!-- Room Overview -->
+    <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 1.5rem;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🏢</span>
+            <span>Room {{ allotment.room_number }} Specifications</span>
+          </div>
+          <span class="badge badge-available">{{ allotment.status }}</span>
+        </div>
+
+        <div class="grid grid-cols-3" style="gap: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-sm);">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Block & Floor</span>
+            <strong style="font-size: 1.05rem; color: #1e293b;">{{ allotment.block }} &bull; Floor {{ allotment.floor }}</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-sm);">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Room Category</span>
+            <strong style="font-size: 1.05rem; color: #1e293b;">{{ allotment.room_type }} (Capacity: {{ allotment.capacity }})</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-sm);">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Allocated Bed</span>
+            <strong style="font-size: 1.05rem; color: #2563eb;">Bed Number #{{ allotment.bed_number }}</strong>
+          </div>
+        </div>
+
+        <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;">
+          <strong>Room Features:</strong> {{ allotment.description or 'Furnished student room with study desks, ergonomic chairs, individual wardrobes, overhead fan, and attached washroom.' }}
+        </p>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+          Allotted on: <strong>{{ allotment.allotted_date|format_datetime('%d %b %Y') }}</strong> &bull;
+          Monthly Tariff: <strong>₹{{ "{:,.0f}".format(allotment.monthly_rent) }}</strong>
+        </div>
+      </div>
+
+      <!-- Maintenance Complaints for this Room -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🛠️</span>
+            <span>Room Maintenance Requests</span>
+          </div>
+        </div>
+
+        {% if complaints %}
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            {% for c in complaints %}
+              <div style="padding: 0.85rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #f8fafc;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <strong style="color: #0f172a;">{{ c.title }}</strong>
+                  <span class="badge badge-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #475569; margin: 0.25rem 0;">{{ c.description }}</p>
+                {% if c.admin_remarks %}
+                  <div style="font-size: 0.8rem; color: #1e40af; margin-top: 0.35rem;">
+                    <strong>Staff Update:</strong> {{ c.admin_remarks }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">No active maintenance issues filed for this room.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Roommates Directory -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>👥</span>
+            <span>Roommates</span>
+          </div>
+        </div>
+
+        {% if roommates %}
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for rm in roommates %}
+              <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; background: #ffffff;">
+                <strong style="font-size: 1rem; color: #0f172a; display: block;">{{ rm.full_name }}</strong>
+                <div style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                  Bed #{{ rm.bed_number }} &bull; {{ rm.branch }} (Sem {{ rm.semester }})
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <a href="tel:{{ rm.phone }}" class="btn btn-sm btn-secondary" style="font-size: 0.8rem;">
+                    📞 {{ rm.phone or 'Call' }}
+                  </a>
+                  <a href="mailto:{{ rm.email }}" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">
+                    ✉️ Email
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">No other roommates in this room.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 4rem 1rem;">
+    <div style="font-size: 3rem; margin-bottom: 0.75rem;">🛏️</div>
+    <h2>No Room Allocated Yet</h2>
+    <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto;">
+      The hostel administration has not allotted a room for {{ ward.full_name }} yet. Please contact the Chief Warden office.
+    </p>
+  </div>
+{% endif %}
+{% endblock %}

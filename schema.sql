@@ -2,21 +2,33 @@
 
 PRAGMA foreign_keys = ON;
 
--- Users Table (Students & Administrators)
+-- Users Table (Students, Administrators & Parents)
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,           -- Roll number for students or 'admin' for warden
+    username TEXT UNIQUE NOT NULL,           -- Roll number for students, 'admin' for warden, or username/phone for parents
     full_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('student', 'admin')),
+    role TEXT NOT NULL CHECK(role IN ('student', 'admin', 'parent')),
     phone TEXT,
     guardian_name TEXT,
     guardian_phone TEXT,
-    branch TEXT,                             -- e.g., 'Computer Engineering'
-    semester INTEGER,                        -- e.g., 3
+    branch TEXT,                             -- e.g., 'Computer Engineering' (for students)
+    semester INTEGER,                        -- e.g., 3 (for students)
     gender TEXT CHECK(gender IN ('Male', 'Female', 'Other')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Parent-Student Mapping Table (Links a Parent to one or more Wards)
+CREATE TABLE IF NOT EXISTS parent_students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    relationship TEXT DEFAULT 'Parent/Guardian',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(parent_id, student_id)
 );
 
 -- Rooms Table
@@ -84,7 +96,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Leave / Outpass Requests Table
+-- Leave / Outpass Requests Table (Two-tier verification: Parent Consent + Warden Clearance)
 CREATE TABLE IF NOT EXISTS outpasses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -94,6 +106,9 @@ CREATE TABLE IF NOT EXISTS outpasses (
     reason TEXT NOT NULL,
     destination TEXT NOT NULL,
     emergency_contact TEXT NOT NULL,
+    parent_approval TEXT DEFAULT 'Pending' CHECK(parent_approval IN ('Pending', 'Approved', 'Rejected')),
+    parent_remarks TEXT,
+    parent_action_at TIMESTAMP,
     status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'Approved', 'Rejected', 'Returned')),
     admin_remarks TEXT,
     reviewed_by INTEGER,
@@ -103,11 +118,67 @@ CREATE TABLE IF NOT EXISTS outpasses (
     FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Create Indexes for performance
+-- Hostel Fees and Payments Table
+CREATE TABLE IF NOT EXISTS fees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    fee_type TEXT NOT NULL CHECK(fee_type IN ('Hostel Rent', 'Mess Fee', 'Maintenance', 'Security Deposit', 'Other')),
+    amount REAL NOT NULL,
+    due_date DATE NOT NULL,
+    paid_date TIMESTAMP,
+    status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'Paid', 'Overdue')),
+    payment_method TEXT,
+    transaction_ref TEXT,
+    receipt_number TEXT UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Daily Night Curfew & Roll Call Attendance Table
+CREATE TABLE IF NOT EXISTS attendance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    date DATE NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('Present', 'Late Entry', 'Absent', 'On Outpass')),
+    check_in_time TEXT,
+    remarks TEXT,
+    marked_by INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (marked_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE(user_id, date)
+);
+
+-- Parent Inquiries & Warden Communication Desk
+CREATE TABLE IF NOT EXISTS parent_queries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    category TEXT DEFAULT 'General' CHECK(category IN ('General', 'Health', 'Leave', 'Fee', 'Mess', 'Discipline')),
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'Resolved')),
+    admin_reply TEXT,
+    replied_by INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    replied_at TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (replied_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_parent_students ON parent_students(parent_id, student_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_block ON rooms(block);
 CREATE INDEX IF NOT EXISTS idx_notices_pinned ON notices(is_pinned, created_at);
 CREATE INDEX IF NOT EXISTS idx_complaints_user ON complaints(user_id);
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
 CREATE INDEX IF NOT EXISTS idx_outpasses_user ON outpasses(user_id);
 CREATE INDEX IF NOT EXISTS idx_outpasses_status ON outpasses(status);
+CREATE INDEX IF NOT EXISTS idx_outpasses_parent_app ON outpasses(parent_approval);
+CREATE INDEX IF NOT EXISTS idx_fees_user ON fees(user_id);
+CREATE INDEX IF NOT EXISTS idx_fees_status ON fees(status);
+CREATE INDEX IF NOT EXISTS idx_attendance_user_date ON attendance(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_parent_queries_parent ON parent_queries(parent_id);

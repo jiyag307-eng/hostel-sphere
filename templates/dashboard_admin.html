@@ -13,9 +13,10 @@
   </div>
 
   <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-    <a href="{{ url_for('admin_new_notice') }}" class="btn btn-primary">+ Post Notice</a>
-    <a href="{{ url_for('admin_rooms') }}" class="btn btn-secondary">🛏️ Allot Room</a>
-    <a href="{{ url_for('admin_outpass') }}" class="btn btn-outline">🎫 Review Passes</a>
+    <a href="{{ url_for('admin_fees') }}" class="btn btn-outline">💳 Fee Collections</a>
+    <a href="{{ url_for('admin_attendance') }}" class="btn btn-outline">🕒 Roll Call</a>
+    <a href="{{ url_for('admin_parent_queries') }}" class="btn btn-secondary">✉️ Parent Desk</a>
+    <a href="{{ url_for('admin_outpass') }}" class="btn btn-primary">🎫 Outpasses</a>
   </div>
 </div>
 
@@ -38,18 +39,18 @@
   </div>
 
   <div class="stat-card">
-    <div class="stat-icon red">🛠️</div>
+    <div class="stat-icon green">💳</div>
     <div>
-      <div class="stat-val">{{ stats.pending_complaints }}</div>
-      <div class="stat-lbl">Pending Maintenance Tickets</div>
+      <div class="stat-val">₹{{ "{:,.0f}".format(stats.total_fee_collected|default(0)) }}</div>
+      <div class="stat-lbl">Fees Collected</div>
     </div>
   </div>
 
   <div class="stat-card">
-    <div class="stat-icon amber">🎫</div>
+    <div class="stat-icon amber">✉️</div>
     <div>
-      <div class="stat-val">{{ stats.pending_outpasses }}</div>
-      <div class="stat-lbl">Pending Outpass Requests</div>
+      <div class="stat-val">{{ stats.pending_parent_queries|default(0) }}</div>
+      <div class="stat-lbl">Parent Queries Pending</div>
     </div>
   </div>
 </div>
@@ -72,8 +73,8 @@
           <thead>
             <tr>
               <th>Student</th>
-              <th>Destination / Reason</th>
-              <th>Departure</th>
+              <th>Destination</th>
+              <th>Parent Consent</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -92,8 +93,14 @@
                     {{ o.reason }}
                   </div>
                 </td>
-                <td style="font-size: 0.8rem; white-space: nowrap;">
-                  {{ o.departure_time|format_datetime('%d %b, %I:%M %p') }}
+                <td>
+                  {% if o.parent_approval == 'Approved' %}
+                    <span class="badge badge-parent-approved">✓ Approved</span>
+                  {% elif o.parent_approval == 'Rejected' %}
+                    <span class="badge badge-parent-rejected">✕ Rejected</span>
+                  {% else %}
+                    <span class="badge badge-parent-pending">⏳ Pending</span>
+                  {% endif %}
                 </td>
                 <td>
                   <form method="POST" action="{{ url_for('admin_review_outpass', outpass_id=o.id) }}" style="display: flex; gap: 0.35rem;">

@@ -1,10 +1,14 @@
 """
 Seed realistic demonstration data for Hostel Management System.
+Includes Students, Administrators, Parents, Rooms, Allotments, Notices,
+Mess Schedules, Maintenance Complaints, 2-Tier Outpasses, Fee Invoices,
+Night Curfew Attendance, and Parent Inquiries.
 Run: python seed_data.py
 """
 
 import sqlite3
 import os
+import datetime
 from werkzeug.security import generate_password_hash
 from database import DATABASE, init_db
 
@@ -22,7 +26,7 @@ def seed():
     cur = conn.cursor()
 
     print("Seeding users...")
-    # Admin
+    # 1. Admin
     admin_pw = generate_password_hash("admin123")
     cur.execute("""
         INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
@@ -31,7 +35,7 @@ def seed():
           "+91 98111 22334", "Admin Office", "+91 98111 22335", "Administration", 0, "Male"))
     admin_id = cur.lastrowid
 
-    # Students
+    # 2. Students
     student_pw = generate_password_hash("student123")
     students_data = [
         ("25001003043", "Jiyansh Sardana", "jiyansh@hostel.edu", student_pw, "student",
@@ -52,6 +56,30 @@ def seed():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, data)
         student_ids[data[0]] = cur.lastrowid
+
+    # 3. Parents
+    print("Seeding parent accounts...")
+    parent_pw = generate_password_hash("parent123")
+    parents_data = [
+        # (username, full_name, email, phone, ward_roll, relation)
+        ("parent_25001003043", "Mr. Rakesh Sardana", "rakesh.sardana@example.com", "+91 98765 00001", "25001003043", "Father"),
+        ("parent_25001003044", "Mr. Manoj Sharma", "manoj.sharma@example.com", "+91 98765 00002", "25001003044", "Father"),
+        ("parent_25001003046", "Mr. Virender Verma", "virender.verma@example.com", "+91 98765 00004", "25001003046", "Father")
+    ]
+    parent_ids = {}
+    for p_user, p_name, p_email, p_phone, ward_roll, relation in parents_data:
+        cur.execute("""
+            INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
+            VALUES (?, ?, ?, ?, 'parent', ?, ?, ?, 'Guardian', 0, 'Male')
+        """, (p_user, p_name, p_email, parent_pw, p_phone, p_name, p_phone))
+        p_id = cur.lastrowid
+        parent_ids[p_user] = p_id
+
+        # Link parent to student
+        cur.execute("""
+            INSERT INTO parent_students (parent_id, student_id, relationship)
+            VALUES (?, ?, ?)
+        """, (p_id, student_ids[ward_roll], relation))
 
     print("Seeding rooms...")
     rooms_data = [
@@ -125,55 +153,46 @@ def seed():
 
     print("Seeding weekly mess menu...")
     mess_schedule = [
-        # Monday
         ("Monday", "Breakfast", "Aloo Paratha, Curd, Pickle, Boiled Eggs / Banana, Tea / Coffee", "07:30 AM - 09:30 AM", "Fresh mint chutney available"),
         ("Monday", "Lunch", "Rajma Masala, Steamed Rice, Tawa Roti, Mix Veg Dry, Boondi Raita, Salad", "12:30 PM - 02:30 PM", "Special Punjabi style Rajma"),
         ("Monday", "Snacks", "Veg Pakoras, Green Chutney, Tea / Milk", "05:00 PM - 06:15 PM", "Evening tea break"),
         ("Monday", "Dinner", "Dal Tadka, Seasonal Sabzi, Paneer Bhurji / Egg Curry, Phulka, Rice, Gulab Jamun", "07:45 PM - 09:45 PM", "Sweet dish included"),
 
-        # Tuesday
         ("Tuesday", "Breakfast", "Idli Sambhar, Coconut Chutney, Medu Vada, Tea / Coffee", "07:30 AM - 09:30 AM", "South Indian special"),
         ("Tuesday", "Lunch", "Kadhi Pakora, Jeera Rice, Chapati, Aloo Gobhi, Roasted Papad, Salad", "12:30 PM - 02:30 PM", "Authentic Kadhi"),
         ("Tuesday", "Snacks", "Aloo Samosa, Tomato Ketchup, Tea / Milk", "05:00 PM - 06:15 PM", "Crispy samosas"),
         ("Tuesday", "Dinner", "Dal Makhani, Mix Veg, Shahi Paneer / Chicken Masala, Butter Naan, Rice, Ice Cream", "07:45 PM - 09:45 PM", "Chef recommendation"),
 
-        # Wednesday
         ("Wednesday", "Breakfast", "Poha with Roasted Peanuts, Sev, Sprouts Salad, Boiled Eggs, Tea / Coffee", "07:30 AM - 09:30 AM", "Healthy breakfast"),
         ("Wednesday", "Lunch", "Chole Bhature / Kulche, Pulao, Cucumber Raita, Pickled Onions, Green Salad", "12:30 PM - 02:30 PM", "Delhi style chole"),
         ("Wednesday", "Snacks", "Bread Roll, Mint Chutney, Tea / Milk", "05:00 PM - 06:15 PM", "Crunchy bread rolls"),
         ("Wednesday", "Dinner", "Yellow Moong Dal, Bhindi Masala, Dum Aloo, Phulka, Steamed Rice, Fruit Custard", "07:45 PM - 09:45 PM", "Light nutritious meal"),
 
-        # Thursday
         ("Thursday", "Breakfast", "Methi Thepla, Curd, Chana Chaat, Fresh Bananas, Tea / Coffee", "07:30 AM - 09:30 AM", "Gujarati delicacy"),
         ("Thursday", "Lunch", "Dal Fry, Baingan Bharta / Aloo Shimlamirch, Chapati, Rice, Plain Curd, Salad", "12:30 PM - 02:30 PM", "Home-style cooked lunch"),
         ("Thursday", "Snacks", "Veg Cutlets, Coriander Dip, Tea / Milk", "05:00 PM - 06:15 PM", "Crispy vegetable patties"),
         ("Thursday", "Dinner", "Chana Dal Tadka, Matar Mushroom / Egg Curry, Jeera Rice, Tandoori Roti, Kheer", "07:45 PM - 09:45 PM", "Traditional rice pudding"),
 
-        # Friday
         ("Friday", "Breakfast", "Uttapam with Sambhar & Red Chilli Chutney, Boiled Eggs / Apples, Tea / Coffee", "07:30 AM - 09:30 AM", "Hot onion-tomato uttapam"),
         ("Friday", "Lunch", "Black Dal (Maa ki Dal), Gatta Curry, Steamed Rice, Tawa Roti, Boondi Raita, Salad", "12:30 PM - 02:30 PM", "Rajasthani flavors"),
         ("Friday", "Snacks", "Paviraj Pav Bhaji / Bun Maska, Tea / Milk", "05:00 PM - 06:15 PM", "Weekend warm-up snacks"),
         ("Friday", "Dinner", "Veg Biryani / Chicken Biryani, Mirchi ka Salan, Onion Raita, Malai Kofta, Moong Dal Halwa", "07:45 PM - 09:45 PM", "Special Biryani night"),
 
-        # Saturday
         ("Saturday", "Breakfast", "Puri Bhaji (Halwai Style Aloo Curry), Suji Halwa, Tea / Coffee", "07:30 AM - 10:00 AM", "Extended Saturday morning hours"),
         ("Saturday", "Lunch", "Khichdi & Kadhi, Roasted Papad, Aloo Chokha, Pickle, Butter Milk (Chaas)", "12:30 PM - 02:30 PM", "Comfort food"),
         ("Saturday", "Snacks", "Bhel Puri / Sev Puri, Tea / Cold Drink", "05:00 PM - 06:15 PM", "Street snack vibes"),
-        ("Dinner", "Dinner", "Dal Tadka, Palak Paneer, Zeera Rice, Roti, Gulab Jamun", "07:45 PM - 09:45 PM", "Wholesome weekend dinner"),
+        ("Saturday", "Dinner", "Dal Tadka, Palak Paneer, Zeera Rice, Roti, Gulab Jamun", "07:45 PM - 09:45 PM", "Wholesome weekend dinner"),
 
-        # Sunday
         ("Sunday", "Breakfast", "Masala Dosa, Sambhar, 2 Chutneys, Tea / Filter Coffee", "08:00 AM - 10:30 AM", "Special Sunday brunch timing"),
         ("Sunday", "Lunch", "Veg Manchurian / Chilli Paneer, Fried Rice, Hakka Noodles, Hot Sweet Corn Soup", "12:30 PM - 02:30 PM", "Indo-Chinese feast"),
         ("Sunday", "Snacks", "Pasta (Red Sauce), Garlic Bread, Tea / Coffee", "05:00 PM - 06:15 PM", "Italian evening"),
         ("Sunday", "Dinner", "Paneer Lababdar / Butter Chicken, Dal Makhani, Garlic Naan, Peas Pulao, Rasgulla", "07:45 PM - 10:00 PM", "Grand Sunday Banquet")
     ]
-    # Note fix for Saturday Dinner tuple
     for item in mess_schedule:
-        day = "Saturday" if item[0] == "Dinner" else item[0]
         cur.execute("""
             INSERT OR REPLACE INTO mess_menu (day_of_week, meal_type, items, timings, special_note)
             VALUES (?, ?, ?, ?, ?)
-        """, (day, item[1], item[2], item[3], item[4]))
+        """, (item[0], item[1], item[2], item[3], item[4]))
 
     print("Seeding complaints...")
     complaints_data = [
@@ -199,25 +218,101 @@ def seed():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, c)
 
-    print("Seeding outpasses...")
+    print("Seeding outpasses with 2-tier approval...")
     outpasses_data = [
-        (student_ids["25001003043"], "2026-11-08 09:00:00", "2026-11-09 20:00:00", None,
+        # (user_id, departure_time, expected_return, actual_return, reason, destination, emergency_contact, parent_app, parent_rem, status, admin_rem, reviewed_by)
+        (student_ids["25001003043"], "2026-11-08 09:00:00", "2026-11-09 20:00:00", "2026-11-09 19:40:00",
          "Visiting hometown for sibling's engagement ceremony", "Faridabad Sector 15 / Delhi",
-         "+91 98765 00001", "Approved", "Parental confirmation verified via telephone call. Permission granted.", admin_id),
+         "+91 98765 00001", "Approved", "Family event confirmed. Permission granted.",
+         "Returned", "Parental confirmation verified via telephone call. Permission granted.", admin_id),
 
         (student_ids["25001003044"], "2026-11-14 08:00:00", "2026-11-15 22:00:00", None,
          "Attending National Inter-College Hackathon at DTU New Delhi", "Delhi Technological University, Rohini",
-         "+91 98765 00002", "Approved", "Official event participation ticket verified. Stay safe.", admin_id),
+         "+91 98765 00002", "Approved", "Academic event confirmed by parent. Safe journey.",
+         "Approved", "Official event participation ticket verified. Stay safe.", admin_id),
 
         (student_ids["25001003045"], "2026-11-07 17:00:00", "2026-11-07 21:00:00", None,
          "Purchasing course textbooks and lab manuals from Nehru Place", "Nehru Place Electronics & Book Market",
-         "+91 98765 00003", "Pending", None, None)
+         "+91 98765 00003", "Pending", None,
+         "Pending", None, None),
+
+        # Pending outpass for Jiyansh Sardana so his parent can approve it right away!
+        (student_ids["25001003043"], "2026-11-25 10:00:00", "2026-11-26 18:00:00", None,
+         "Weekend home visit for family function and dental appointment", "Gurugram Sector 14, Haryana",
+         "+91 98765 00001", "Pending", None,
+         "Pending", None, None)
     ]
     for o in outpasses_data:
         cur.execute("""
-            INSERT INTO outpasses (user_id, departure_time, expected_return, actual_return, reason, destination, emergency_contact, status, admin_remarks, reviewed_by, reviewed_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        """, o)
+            INSERT INTO outpasses (user_id, departure_time, expected_return, actual_return, reason, destination, emergency_contact,
+                                   parent_approval, parent_remarks, parent_action_at, status, admin_remarks, reviewed_by, reviewed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? = 'Approved' THEN CURRENT_TIMESTAMP ELSE NULL END, ?, ?, ?, CURRENT_TIMESTAMP)
+        """, (o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7], o[8], o[7], o[9], o[10], o[11]))
+
+    print("Seeding fees...")
+    fees_data = [
+        # (user_id, title, fee_type, amount, due_date, paid_date, status, payment_method, transaction_ref, receipt_number)
+        (student_ids["25001003043"], "Semester 3 Hostel Accommodation (AC Double)", "Hostel Rent", 27000.0, "2026-08-15", "2026-08-10 11:20:00", "Paid", "UPI", "UPI9823412039", "REC-2026-1001"),
+        (student_ids["25001003043"], "Fall 2026 Mess Advance (Full Semester)", "Mess Fee", 18000.0, "2026-08-20", "2026-08-12 15:45:00", "Paid", "NetBanking", "NB88231902", "REC-2026-1002"),
+        (student_ids["25001003043"], "Hostel Amenities & Maintenance Fee", "Maintenance", 2500.0, "2026-11-30", None, "Pending", None, None, None),
+
+        (student_ids["25001003044"], "Semester 3 Hostel Accommodation (AC Double)", "Hostel Rent", 27000.0, "2026-08-15", "2026-08-11 09:30:00", "Paid", "Debit Card", "DC773412", "REC-2026-1003"),
+        (student_ids["25001003044"], "Fall 2026 Mess Advance (Full Semester)", "Mess Fee", 18000.0, "2026-08-20", None, "Pending", None, None, None),
+
+        (student_ids["25001003046"], "Semester 3 Girls Hostel Room (AC)", "Hostel Rent", 27000.0, "2026-08-15", "2026-08-08 14:10:00", "Paid", "UPI", "UPI55123901", "REC-2026-1004"),
+        (student_ids["25001003046"], "Fall 2026 Mess Charges", "Mess Fee", 18000.0, "2026-08-20", "2026-08-08 14:15:00", "Paid", "UPI", "UPI55123902", "REC-2026-1005")
+    ]
+    for f in fees_data:
+        cur.execute("""
+            INSERT INTO fees (user_id, title, fee_type, amount, due_date, paid_date, status, payment_method, transaction_ref, receipt_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, f)
+
+    print("Seeding attendance logs...")
+    # Seed past 6 days of attendance
+    base_date = datetime.date(2026, 11, 16)
+    for i in range(7):
+        att_date = (base_date + datetime.timedelta(days=i)).isoformat()
+        # Jiyansh
+        j_status = "Present" if i != 4 else "Late Entry"
+        j_time = "21:15" if i != 4 else "21:48"
+        j_remarks = "Biometric check-in verified" if i != 4 else "Late by 18 mins due to library study group"
+        cur.execute("""
+            INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (student_ids["25001003043"], att_date, j_status, j_time, j_remarks, admin_id))
+
+        # Rahul
+        r_status = "On Outpass" if (i == 2 or i == 3) else "Present"
+        r_time = "Outpass" if (i == 2 or i == 3) else "21:20"
+        cur.execute("""
+            INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (student_ids["25001003044"], att_date, r_status, r_time, "Curfew roll call verified", admin_id))
+
+        # Priya
+        cur.execute("""
+            INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, 'Present', '21:05', 'Girls Wing turnstile verified', ?)
+        """, (student_ids["25001003046"], att_date, admin_id))
+
+    print("Seeding parent queries...")
+    queries_data = [
+        (parent_ids["parent_25001003043"], student_ids["25001003043"], "Health",
+         "Campus First Aid & Late-Night Dispensary Timings",
+         "Dear Warden, could you please confirm the nearest doctor on-call timings on campus for residents?",
+         "Resolved", "Dispensary is open 24x7 near the Admin Block. Medical emergency helpline: +91 98111 22999.", admin_id),
+
+        (parent_ids["parent_25001003044"], student_ids["25001003044"], "Mess",
+         "Vegetarian Diet Preferences during Festivals",
+         "Requesting special Navratri/festive satvik meals during the upcoming week.",
+         "Pending", None, None)
+    ]
+    for q in queries_data:
+        cur.execute("""
+            INSERT INTO parent_queries (parent_id, student_id, category, subject, message, status, admin_reply, replied_by, replied_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? = 'Resolved' THEN CURRENT_TIMESTAMP ELSE NULL END)
+        """, (q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[5]))
 
     conn.commit()
     conn.close()
