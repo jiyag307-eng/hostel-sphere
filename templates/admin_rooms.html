@@ -154,7 +154,7 @@
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; gap: 1rem; flex-wrap: wrap;">
             <div>
               <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <h3 style="font-size: 1.25rem; margin: 0; color: #0f172a;">Room {{ r.room_number }}</h3>
+                <h3 style="font-size: 1.25rem; margin: 0; color: var(--text-main);">Room {{ r.room_number }}</h3>
                 <span class="badge badge-cat-general">{{ r.block }} &bull; Floor {{ r.floor }}</span>
                 <span class="badge badge-{{ 'available' if r.current_occupancy < r.capacity else 'occupied' }}">
                   {{ r.current_occupancy }} / {{ r.capacity }} Beds Filled
@@ -170,13 +170,13 @@
           <!-- Current Occupants in this Room -->
           {% set occupants = room_occupants.get(r.id, []) %}
           {% if occupants %}
-            <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem;">
+            <div style="background: #111827; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem;">
               <h5 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; letter-spacing: 0.5px;">
                 Current Occupants
               </h5>
               <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 {% for occ in occupants %}
-                  <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span class="badge badge-pending">Bed #{{ occ.bed_number }}</span>
                       <strong>{{ occ.full_name }}</strong>
@@ -194,7 +194,7 @@
               </div>
             </div>
           {% else %}
-            <div style="background: #f8fafc; padding: 0.65rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
+            <div style="background: #111827; padding: 0.65rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
               No students currently allotted to this room. All beds vacant.
             </div>
           {% endif %}

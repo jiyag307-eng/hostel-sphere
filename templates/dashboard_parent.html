@@ -62,7 +62,7 @@
 <div class="grid grid-cols-4" style="margin-bottom: 2rem;">
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Outpasses</span>
-    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       {{ pending_outpasses|length }} <span style="font-size: 0.85rem; font-weight: 500; color: #b45309;">Pending Approval</span>
     </div>
     <a href="{{ url_for('parent_outpasses') }}" style="font-size: 0.825rem; font-weight: 600;">Manage Outpasses &rarr;</a>
@@ -78,7 +78,7 @@
 
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Curfew Attendance</span>
-    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       {{ attendance_stats.rate }}% <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Recent Check-ins</span>
     </div>
     <a href="{{ url_for('parent_attendance') }}" style="font-size: 0.825rem; font-weight: 600;">View Attendance Log &rarr;</a>
@@ -86,7 +86,7 @@
 
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--accent);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Warden Communication</span>
-    <div style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       {{ open_queries_count }} <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Open Inquiries</span>
     </div>
     <a href="{{ url_for('parent_queries') }}" style="font-size: 0.825rem; font-weight: 600;">Contact Warden &rarr;</a>
@@ -109,7 +109,7 @@
       {% if recent_outpasses %}
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
           {% for o in recent_outpasses %}
-            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; {% if o.parent_approval == 'Pending' %}border-left: 4px solid #f59e0b; background: #fffdf5;{% elif o.parent_approval == 'Approved' %}border-left: 4px solid #10b981;{% else %}border-left: 4px solid #ef4444;{% endif %}">
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-card); {% if o.parent_approval == 'Pending' %}border-left: 4px solid #f59e0b; background: #fffdf5;{% elif o.parent_approval == 'Approved' %}border-left: 4px solid #10b981;{% else %}border-left: 4px solid #ef4444;{% endif %}">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
                 <div>
                   <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
@@ -136,7 +136,7 @@
               </div>
 
               <!-- Timings Pill -->
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: #111827; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
                 <div>
                   <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Departure</span>
                   <strong style="color: #1e40af; font-size: 0.9rem;">{{ o.departure_time|format_datetime }}</strong>
@@ -147,14 +147,14 @@
                 </div>
               </div>
 
-              <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.75rem;">
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem;">
                 <strong>Reason given by {{ ward.full_name.split(' ')[0] }}:</strong> {{ o.reason }}
               </p>
 
               <!-- Parent 1-Click Approve Form if Pending -->
               {% if o.parent_approval == 'Pending' %}
                 <form method="POST" action="{{ url_for('parent_review_outpass', outpass_id=o.id) }}" style="background: #fff; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem; margin-top: 0.5rem;">
-                  <div style="font-weight: 600; font-size: 0.85rem; color: #854d0e; margin-bottom: 0.5rem;">
+                  <div style="font-weight: 600; font-size: 0.85rem; color: #fcd34d; margin-bottom: 0.5rem;">
                     👨‍👩‍👦 Authorize Leave for {{ ward.full_name }}:
                   </div>
                   <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
@@ -169,7 +169,7 @@
                   </div>
                 </form>
               {% elif o.parent_remarks %}
-                <div style="font-size: 0.85rem; padding: 0.45rem 0.75rem; background: #fefce8; border-radius: var(--radius-sm); color: #854d0e; margin-top: 0.5rem;">
+                <div style="font-size: 0.85rem; padding: 0.45rem 0.75rem; background: #2d1b00; border-radius: var(--radius-sm); color: #fcd34d; margin-top: 0.5rem;">
                   <strong>Your Consent Note:</strong> {{ o.parent_remarks }} &bull; {{ o.parent_action_at|format_datetime }}
                 </div>
               {% endif %}
@@ -195,14 +195,14 @@
       </div>
 
       {% if allotment %}
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #111827; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
           <div>
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Room & Block</span>
-            <strong style="font-size: 1.1rem; color: #1e293b;">{{ allotment.room_number }} ({{ allotment.block }})</strong>
+            <strong style="font-size: 1.1rem; color: var(--text-main);">{{ allotment.room_number }} ({{ allotment.block }})</strong>
           </div>
           <div>
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Room Type & Bed</span>
-            <strong style="font-size: 1.1rem; color: #1e293b;">{{ allotment.room_type }} &bull; Bed #{{ allotment.bed_number }}</strong>
+            <strong style="font-size: 1.1rem; color: var(--text-main);">{{ allotment.room_type }} &bull; Bed #{{ allotment.bed_number }}</strong>
           </div>
           <div>
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Monthly Accommodation</span>
@@ -210,13 +210,13 @@
           </div>
         </div>
 
-        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #334155;">Roommates in {{ allotment.room_number }}:</h4>
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #d1d5db;">Roommates in {{ allotment.room_number }}:</h4>
         {% if roommates %}
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             {% for rm in roommates %}
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
                 <div>
-                  <strong style="color: #0f172a;">{{ rm.full_name }}</strong>
+                  <strong style="color: var(--text-main);">{{ rm.full_name }}</strong>
                   <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem;">(Bed #{{ rm.bed_number }}, {{ rm.branch }})</span>
                 </div>
                 <div>
@@ -251,9 +251,9 @@
       {% if recent_attendance %}
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           {% for a in recent_attendance %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); background: #f8fafc; border: 1px solid var(--border-light);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); background: #111827; border: 1px solid var(--border-light);">
               <div>
-                <strong style="font-size: 0.9rem; color: #1e293b;">{{ a.date|format_datetime('%d %b %Y') }}</strong>
+                <strong style="font-size: 0.9rem; color: var(--text-main);">{{ a.date|format_datetime('%d %b %Y') }}</strong>
                 <span style="font-size: 0.775rem; color: var(--text-muted); display: block;">Check-in: {{ a.check_in_time or 'Curfew' }}</span>
               </div>
               <span class="badge badge-{{ a.status|lower|replace(' ', '-') }}">{{ a.status }}</span>
@@ -303,8 +303,8 @@
 
     <!-- Hostel Administration Helpline Box -->
     <div class="card" style="background: #f1f5f9; border: 1px solid #cbd5e1;">
-      <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #1e293b;">📞 Campus Emergency Helplines</h3>
-      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; color: #475569;">
+      <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-main);">📞 Campus Emergency Helplines</h3>
+      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-muted);">
         <div><strong>Chief Warden Office:</strong> <a href="tel:+919811122334">+91 98111 22334</a></div>
         <div><strong>24x7 Campus Security Gate:</strong> <a href="tel:+919811122335">+91 98111 22335</a></div>
         <div><strong>Campus Medical Emergency:</strong> <a href="tel:+919811122999">+91 98111 22999</a></div>

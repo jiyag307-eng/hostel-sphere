@@ -82,12 +82,12 @@
     </div>
 
     {% if allotment %}
-      <div style="margin-bottom: 1.25rem; padding: 1rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="margin-bottom: 1.25rem; padding: 1rem; background: #111827; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
           <h3 style="font-size: 1.25rem; margin: 0; color: var(--primary);">Room {{ allotment.room_number }}</h3>
           <span class="badge badge-available">{{ allotment.room_type }}</span>
         </div>
-        <p style="margin: 0; font-size: 0.875rem; color: #475569;">
+        <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">
           {{ allotment.block }}, Floor {{ allotment.floor }} &bull; Your Allotted Bed: <strong>Bed #{{ allotment.bed_number }}</strong>
         </p>
       </div>
@@ -96,7 +96,7 @@
       {% if roommates %}
         <div style="display: flex; flex-direction: column; gap: 0.65rem;">
           {% for r in roommates %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
               <div>
                 <strong>{{ r.full_name }}</strong>
                 <div style="font-size: 0.775rem; color: var(--text-muted);">
@@ -119,7 +119,7 @@
 
     <!-- Quick Services Strip -->
     <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
-      <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #1e293b;">Quick Services</h4>
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-main);">Quick Services</h4>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <a href="{{ url_for('student_complaints') }}" class="btn btn-sm btn-secondary">Maintenance Tickets</a>
         <a href="{{ url_for('student_outpass') }}" class="btn btn-sm btn-secondary">Gate Leave Passes</a>
@@ -142,14 +142,14 @@
     {% if pinned_notices %}
       <div style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem;">
         {% for notice in pinned_notices %}
-          <div style="padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); {% if notice.is_pinned %}background: #fbfcfe; border-left: 3px solid var(--primary);{% else %}background: #fafafa;{% endif %}">
+          <div style="padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); {% if notice.is_pinned %}background: #0d1a0f; border-left: 3px solid var(--primary);{% else %}background: #fafafa;{% endif %}">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #1e293b;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--text-main);">
                 {{ notice.title }}
               </h4>
               <span class="badge badge-cat-{{ notice.category|lower }}">{{ notice.category }}</span>
             </div>
-            <p style="font-size: 0.85rem; color: #475569; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
               {{ notice.content }}
             </p>
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">
@@ -163,9 +163,9 @@
     {% endif %}
 
     <!-- Hostel Helpdesk Card -->
-    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
-      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #1e293b;">Hostel Caretaker & Support</h4>
-      <div style="font-size: 0.85rem; color: #475569; display: flex; flex-direction: column; gap: 0.25rem;">
+    <div style="background: #111827; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
+      <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-main);">Hostel Caretaker & Support</h4>
+      <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
         <div><strong>Chief Warden Office:</strong> 0129-2242143 (9:00 AM - 5:00 PM)</div>
         <div><strong>Caretaker Desk:</strong> +91 98111 22334</div>
         <div><strong>Security Gate (24x7):</strong> +91 98111 22339</div>

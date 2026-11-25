@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <style>
     body {
-      background-color: #f1f5f9;
+      background-color: #111827;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -26,10 +26,10 @@
   <!-- Printable Gate Pass Card -->
   <div class="gatepass-container">
     <div class="gatepass-header">
-      <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b;">
+      <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9ca3af;">
         HostelSphere Security Division
       </div>
-      <h2 style="margin: 0.25rem 0 0.25rem 0; font-size: 1.5rem; color: #0f172a;">Official Resident Gate Pass</h2>
+      <h2 style="margin: 0.25rem 0 0.25rem 0; font-size: 1.5rem; color: #f9fafb;">Official Resident Gate Pass</h2>
       <div class="gatepass-id">PASS-{{ "%04d"|format(outpass.id) }}-{{ current_year }}</div>
     </div>
 
@@ -41,7 +41,7 @@
       {% if outpass.status == 'Approved' %}
         <span class="gatepass-stamp">WARDEN: APPROVED</span>
       {% elif outpass.status == 'Returned' %}
-        <span class="gatepass-stamp" style="border-color: #475569; color: #475569;">RETURN LOGGED</span>
+        <span class="gatepass-stamp" style="border-color: var(--text-muted); color: var(--text-muted);">RETURN LOGGED</span>
       {% else %}
         <span class="gatepass-stamp" style="border-color: #ef4444; color: #ef4444;">WARDEN: {{ outpass.status }}</span>
       {% endif %}
@@ -88,9 +88,9 @@
         <span style="font-weight: 500; font-size: 0.9rem;">{{ outpass.reason }}</span>
       </div>
 
-      <div class="gatepass-item" style="grid-column: span 2; background: #fefce8; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px dashed #fde047;">
-        <label style="color: #854d0e;">Parent / Guardian Verification</label>
-        <span style="font-size: 0.875rem; color: #713f12;">
+      <div class="gatepass-item" style="grid-column: span 2; background: #2d1b00; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px dashed #78350f;">
+        <label style="color: #fcd34d;">Parent / Guardian Verification</label>
+        <span style="font-size: 0.875rem; color: #fbbf24;">
           <strong>Consent:</strong> {{ outpass.parent_approval or 'Pending' }} &bull;
           <strong>Guardian:</strong> {{ outpass.guardian_name or 'Parent' }} ({{ outpass.emergency_contact }})
           {% if outpass.parent_remarks %}<br><strong>Note:</strong> "{{ outpass.parent_remarks }}"{% endif %}
@@ -107,7 +107,7 @@
     </div>
 
     <!-- Security Checkpoint Instructions -->
-    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.775rem; color: #64748b; line-height: 1.4;">
+    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 0.775rem; color: var(--text-muted); line-height: 1.4;">
       <p style="margin-bottom: 0.35rem;">
         <strong>Notice to Security Guard:</strong> Please verify student university photo ID card before permitting campus exit. Return after expected deadline will be flagged automatically to the Chief Warden.
       </p>

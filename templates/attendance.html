@@ -33,7 +33,7 @@
 <div class="grid grid-cols-4" style="margin-bottom: 2rem;">
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Attendance Rate</span>
-    <div style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       {{ stats.attendance_rate }}%
     </div>
     <span style="font-size: 0.8rem; color: #047857; font-weight: 600;">{{ stats.present_count }} Days Present</span>
@@ -91,7 +91,7 @@
           {% for r in records %}
             <tr>
               <td>
-                <strong style="color: #0f172a; font-size: 0.95rem;">{{ r.date|format_datetime('%A, %d %b %Y') }}</strong>
+                <strong style="color: var(--text-main); font-size: 0.95rem;">{{ r.date|format_datetime('%A, %d %b %Y') }}</strong>
               </td>
               <td>
                 <span style="font-family: monospace; font-size: 0.95rem; font-weight: 600; color: #1e40af;">
@@ -103,7 +103,7 @@
                   {{ r.status }}
                 </span>
               </td>
-              <td style="color: #475569; font-size: 0.875rem;">
+              <td style="color: var(--text-muted); font-size: 0.875rem;">
                 {{ r.remarks or 'Regular curfew verification verified.' }}
               </td>
             </tr>

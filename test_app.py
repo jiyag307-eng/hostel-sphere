@@ -80,10 +80,10 @@ class HostelAppTestCase(unittest.TestCase):
         self.logout()
 
     def test_parent_login_and_dashboard(self):
-        # Parent login for Rakesh Sardana
+        # Parent login for Kapil Sardana
         rv = self.login('parent_25001003043', 'parent123')
         self.assertEqual(rv.status_code, 200)
-        self.assertIn(b'Mr. Rakesh Sardana', rv.data)
+        self.assertIn(b'Mr. Kapil Sardana', rv.data)
         self.assertIn(b'Jiyansh Sardana', rv.data)
 
         # Access Parent Dashboard
@@ -201,7 +201,7 @@ class HostelAppTestCase(unittest.TestCase):
         # Pay pending fee #3
         rv_pay = self.client.post('/fees/3/pay', data=dict(
             payment_method='UPI',
-            payer_name='Mr. Rakesh Sardana'
+            payer_name='Mr. Kapil Sardana'
         ), follow_redirects=True)
         self.assertEqual(rv_pay.status_code, 200)
         self.assertIn(b'Payment of', rv_pay.data)

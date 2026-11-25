@@ -67,12 +67,12 @@
       {% if queries %}
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
           {% for q in queries %}
-            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; {% if q.status == 'Resolved' %}border-left: 4px solid #10b981;{% else %}border-left: 4px solid #f59e0b;{% endif %}">
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-card); {% if q.status == 'Resolved' %}border-left: 4px solid #10b981;{% else %}border-left: 4px solid #f59e0b;{% endif %}">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
                 <div>
                   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                     <h3 style="font-size: 1.15rem; margin: 0;">{{ q.subject }}</h3>
-                    <span class="badge" style="background: #f1f5f9; color: #334155;">{{ q.category }}</span>
+                    <span class="badge" style="background: #f1f5f9; color: #d1d5db;">{{ q.category }}</span>
                     <span class="badge badge-{{ q.status|lower }}">{{ q.status }}</span>
                   </div>
                   <div style="font-size: 0.8rem; color: var(--text-muted);">
@@ -82,7 +82,7 @@
               </div>
 
               <!-- Parent Message -->
-              <p style="font-size: 0.9rem; color: #334155; margin-bottom: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-sm);">
+              <p style="font-size: 0.9rem; color: #d1d5db; margin-bottom: 0.75rem; background: #111827; padding: 0.75rem 1rem; border-radius: var(--radius-sm);">
                 <strong>Your Message:</strong> {{ q.message }}
               </p>
 
@@ -98,7 +98,7 @@
                   <div>{{ q.admin_reply }}</div>
                 </div>
               {% else %}
-                <div style="font-size: 0.825rem; color: #92400e; background: #fefce8; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.825rem; color: #92400e; background: #2d1b00; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
                   ⏳ Under review by Chief Warden. You will be notified once a response is posted.
                 </div>
               {% endif %}

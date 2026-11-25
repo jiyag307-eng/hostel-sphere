@@ -24,24 +24,24 @@
         </div>
 
         <div class="grid grid-cols-3" style="margin-bottom: 1.5rem;">
-          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Hostel Block</span>
-            <strong style="font-size: 1.15rem; color: #1e293b;">{{ allotment.block }}</strong>
+            <strong style="font-size: 1.15rem; color: var(--text-main);">{{ allotment.block }}</strong>
           </div>
 
-          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Floor</span>
-            <strong style="font-size: 1.15rem; color: #1e293b;">Floor {{ allotment.floor }}</strong>
+            <strong style="font-size: 1.15rem; color: var(--text-main);">Floor {{ allotment.floor }}</strong>
           </div>
 
-          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Your Assigned Bed</span>
             <strong style="font-size: 1.15rem; color: var(--primary);">Bed #{{ allotment.bed_number }}</strong>
           </div>
         </div>
 
         <h4 style="margin-bottom: 0.5rem;">Room Description & Amenities</h4>
-        <p style="color: #475569; font-size: 0.95rem; margin-bottom: 1.5rem;">
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
           {{ allotment.description or 'Furnished student room with study tables, beds, personal storage wardrobes, and attached washroom facility.' }}
         </p>
 
@@ -89,19 +89,19 @@
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.875rem;">
-          <div style="padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
             <strong>Chief Warden Office</strong>
             <div style="color: var(--text-muted); font-size: 0.8rem;">Dr. Rajeshwar Sharma</div>
             <div style="color: var(--primary); font-weight: 600; margin-top: 0.25rem;">📞 +91 98111 22334</div>
           </div>
 
-          <div style="padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
             <strong>Hostel Security Gate Booth</strong>
             <div style="color: var(--text-muted); font-size: 0.8rem;">Available 24/7 for emergency reporting</div>
             <div style="color: var(--primary); font-weight: 600; margin-top: 0.25rem;">📞 +91 98111 22335</div>
           </div>
 
-          <div style="padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
             <strong>Maintenance Desk</strong>
             <div style="color: var(--text-muted); font-size: 0.8rem;">Electrician, Plumber & Carpenter</div>
             <a href="{{ url_for('student_complaints') }}" class="btn btn-sm btn-outline" style="margin-top: 0.5rem; width: 100%;">

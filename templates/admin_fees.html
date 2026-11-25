@@ -19,7 +19,7 @@
 <div class="grid grid-cols-4" style="margin-bottom: 2rem;">
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Total Billed</span>
-    <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       ₹{{ "{:,.0f}".format(stats.total_billed) }}
     </div>
     <span style="font-size: 0.8rem; color: var(--text-muted);">All student invoices</span>
@@ -43,7 +43,7 @@
 
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--info);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Collection Rate</span>
-    <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       {{ stats.collection_rate }}%
     </div>
     <span style="font-size: 0.8rem; color: var(--text-muted);">Recovery percentage</span>
@@ -102,13 +102,13 @@
           {% for f in fees %}
             <tr>
               <td>
-                <strong style="color: #0f172a;">{{ f.student_name }}</strong>
+                <strong style="color: var(--text-main);">{{ f.student_name }}</strong>
                 <div style="font-size: 0.775rem; color: var(--text-muted); font-family: monospace;">
                   Roll: {{ f.roll_number }} &bull; Room: {{ f.room_number or 'N/A' }}
                 </div>
               </td>
               <td>
-                <span style="font-weight: 600; color: #1e293b;">{{ f.title }}</span>
+                <span style="font-weight: 600; color: var(--text-main);">{{ f.title }}</span>
                 {% if f.receipt_number %}
                   <div style="font-size: 0.75rem; color: #047857; font-family: monospace;">
                     Receipt: {{ f.receipt_number }}
@@ -116,10 +116,10 @@
                 {% endif %}
               </td>
               <td>
-                <span class="badge" style="background: #f1f5f9; color: #334155;">{{ f.fee_type }}</span>
+                <span class="badge" style="background: #f1f5f9; color: #d1d5db;">{{ f.fee_type }}</span>
               </td>
               <td>
-                <strong style="color: #0f172a; font-size: 1.05rem;">₹{{ "{:,.0f}".format(f.amount) }}</strong>
+                <strong style="color: var(--text-main); font-size: 1.05rem;">₹{{ "{:,.0f}".format(f.amount) }}</strong>
               </td>
               <td>
                 <span style="font-size: 0.85rem; color: var(--text-muted);">{{ f.due_date|format_datetime('%d %b %Y') }}</span>
@@ -153,7 +153,7 @@
 
 <!-- Modal: Issue New Fee Bill -->
 <div id="addFeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-  <div class="card" style="max-width: 520px; width: 90%; padding: 2rem; box-shadow: var(--shadow-xl); background: white;">
+  <div class="card" style="max-width: 520px; width: 90%; padding: 2rem; box-shadow: var(--shadow-xl); background: var(--bg-card);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
       <h3 style="margin: 0;">➕ Issue New Hostel Fee Invoice</h3>
       <button type="button" onclick="toggleAddFeeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>

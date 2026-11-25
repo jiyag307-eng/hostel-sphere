@@ -560,7 +560,12 @@ def student_outpass():
         expected_return = request.form.get('expected_return', '').strip()
         reason = request.form.get('reason', '').strip()
         destination = request.form.get('destination', '').strip()
-        emergency_contact = request.form.get('emergency_contact', user['guardian_phone'] or user['phone']).strip()
+        emergency_contact = (
+            request.form.get('emergency_contact') or 
+            (user['guardian_phone'] if user else None) or 
+            (user['phone'] if user else None) or 
+            'Not Provided'
+        ).strip()
 
         if not departure_time or not expected_return or not reason or not destination:
             flash("All leave details are required to submit an outpass request.", "danger")

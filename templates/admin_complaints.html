@@ -42,7 +42,7 @@
   {% if complaints %}
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       {% for c in complaints %}
-        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; box-shadow: var(--shadow-sm);">
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-card); box-shadow: var(--shadow-sm);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
             <div>
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
@@ -56,7 +56,7 @@
             </div>
           </div>
 
-          <p style="font-size: 0.925rem; color: #334155; margin-bottom: 1rem; background: #f8fafc; padding: 0.85rem; border-radius: var(--radius-sm); border-left: 3px solid #cbd5e1;">
+          <p style="font-size: 0.925rem; color: #d1d5db; margin-bottom: 1rem; background: #111827; padding: 0.85rem; border-radius: var(--radius-sm); border-left: 3px solid #cbd5e1;">
             {{ c.description }}
           </p>
 

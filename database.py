@@ -1,18 +1,64 @@
 """
 Database module for Hostel Management System
 Handles SQLite connection, schema execution, and common helpers.
+Supports local execution and Vercel serverless deployment (/tmp writable storage).
 """
 
 import sqlite3
 import os
+import shutil
 from flask import g
 
-DATABASE = os.path.join(os.path.dirname(__file__), 'hostel.db')
-SCHEMA_PATH = os.path.join(os.path.dirname(__file__), 'schema.sql')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCHEMA_PATH = os.path.join(BASE_DIR, 'schema.sql')
+LOCAL_DB = os.path.join(BASE_DIR, 'hostel.db')
+
+# On Vercel serverless functions, only /tmp is writable
+IS_SERVERLESS = bool(
+    os.environ.get('VERCEL') or 
+    os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or 
+    not os.access(BASE_DIR, os.W_OK)
+)
+
+if IS_SERVERLESS:
+    DATABASE = '/tmp/hostel.db'
+else:
+    DATABASE = os.environ.get('DATABASE_PATH', LOCAL_DB)
+
+
+def ensure_db_ready():
+    """Ensure writable database exists with schema and seed data on serverless cold starts."""
+    if IS_SERVERLESS:
+        if not os.path.exists(DATABASE):
+            # Try to copy pre-seeded database to /tmp
+            if os.path.exists(LOCAL_DB):
+                try:
+                    shutil.copyfile(LOCAL_DB, DATABASE)
+                    os.chmod(DATABASE, 0o666)
+                except Exception as e:
+                    print("Notice: Error copying bundled db to /tmp:", e)
+
+            # If still not present, initialize schema and seed
+            if not os.path.exists(DATABASE):
+                try:
+                    conn = sqlite3.connect(DATABASE)
+                    with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
+                        conn.executescript(f.read())
+                    conn.commit()
+                    conn.close()
+                    import seed_data
+                    seed_data.seed()
+                except Exception as e:
+                    print("Notice: Error initializing /tmp database:", e)
+
+
+# Run verification on import
+ensure_db_ready()
 
 
 def get_db():
     """Get or create database connection for the current request context."""
+    ensure_db_ready()
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
@@ -21,7 +67,7 @@ def get_db():
     return db
 
 
-def close_connection(exception):
+def close_connection(exception=None):
     """Closes database connection at request end."""
     db = getattr(g, '_database', None)
     if db is not None:
@@ -53,20 +99,19 @@ def init_db():
         conn.executescript(f.read())
     conn.commit()
     conn.close()
-    print("Database initialized successfully.")
+    print(f"Database initialized successfully at {DATABASE}.")
 
 
 def upgrade_db():
     """Ensure any newly added columns and tables exist in an existing database."""
+    ensure_db_ready()
     conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
 
-    # Create new tables if not present
     with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
         schema_script = f.read()
     conn.executescript(schema_script)
 
-    # Check and add columns to outpasses if missing
     cur.execute("PRAGMA table_info(outpasses)")
     columns = [row[1] for row in cur.fetchall()]
     if 'parent_approval' not in columns:

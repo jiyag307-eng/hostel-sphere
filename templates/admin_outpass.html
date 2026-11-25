@@ -30,7 +30,7 @@
   {% if outpasses %}
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       {% for o in outpasses %}
-        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: white; box-shadow: var(--shadow-sm); {% if o.status == 'Pending' %}border-left: 4px solid var(--warning);{% elif o.status == 'Approved' %}border-left: 4px solid var(--success);{% endif %}">
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-card); box-shadow: var(--shadow-sm); {% if o.status == 'Pending' %}border-left: 4px solid var(--warning);{% elif o.status == 'Approved' %}border-left: 4px solid var(--success);{% endif %}">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem; flex-wrap: wrap;">
             <div>
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
@@ -68,10 +68,10 @@
           </div>
 
           <!-- Leave Details Grid -->
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #f8fafc; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: #111827; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem;">
             <div>
               <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Destination</span>
-              <strong style="color: #1e293b; font-size: 0.95rem;">{{ o.destination }}</strong>
+              <strong style="color: var(--text-main); font-size: 0.95rem;">{{ o.destination }}</strong>
             </div>
 
             <div>
@@ -85,7 +85,7 @@
             </div>
           </div>
 
-          <p style="font-size: 0.9rem; color: #334155; margin-bottom: 0.75rem;">
+          <p style="font-size: 0.9rem; color: #d1d5db; margin-bottom: 0.75rem;">
             <strong>Reason for Leave:</strong> {{ o.reason }}
           </p>
 

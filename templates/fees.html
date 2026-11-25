@@ -25,7 +25,7 @@
 <div class="grid grid-cols-3" style="margin-bottom: 2rem;">
   <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Total Billed</span>
-    <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0;">
+    <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0;">
       ₹{{ "{:,.0f}".format(summary.total_billed) }}
     </div>
     <span style="font-size: 0.825rem; color: var(--text-muted);">Cumulative academic year fees</span>
@@ -79,7 +79,7 @@
           {% for f in fees %}
             <tr>
               <td>
-                <strong style="color: #0f172a; font-size: 0.95rem;">{{ f.title }}</strong>
+                <strong style="color: var(--text-main); font-size: 0.95rem;">{{ f.title }}</strong>
                 {% if f.receipt_number %}
                   <div style="font-size: 0.775rem; color: var(--text-muted); font-family: monospace;">
                     Receipt: {{ f.receipt_number }} &bull; Ref: {{ f.transaction_ref }}
@@ -87,10 +87,10 @@
                 {% endif %}
               </td>
               <td>
-                <span class="badge" style="background: #f1f5f9; color: #334155;">{{ f.fee_type }}</span>
+                <span class="badge" style="background: #f1f5f9; color: #d1d5db;">{{ f.fee_type }}</span>
               </td>
               <td>
-                <strong style="font-size: 1.05rem; color: #1e293b;">₹{{ "{:,.0f}".format(f.amount) }}</strong>
+                <strong style="font-size: 1.05rem; color: var(--text-main);">₹{{ "{:,.0f}".format(f.amount) }}</strong>
               </td>
               <td>
                 <span style="font-size: 0.875rem; color: var(--text-muted);">{{ f.due_date|format_datetime('%d %b %Y') }}</span>
@@ -130,15 +130,15 @@
 
 <!-- Modal: Simulated Payment Gateway -->
 <div id="paymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-  <div class="card" style="max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-xl); background: white;">
+  <div class="card" style="max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-xl); background: var(--bg-card);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
       <h3 style="margin: 0;">🔒 Secure Fee Payment</h3>
       <button type="button" onclick="closePaymentModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
 
-    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+    <div style="background: #111827; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
       <span style="font-size: 0.775rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Payee Invoice</span>
-      <strong id="modalFeeTitle" style="font-size: 1rem; color: #1e293b; display: block; margin-bottom: 0.25rem;">Hostel Fee</strong>
+      <strong id="modalFeeTitle" style="font-size: 1rem; color: var(--text-main); display: block; margin-bottom: 0.25rem;">Hostel Fee</strong>
       <div style="font-size: 1.5rem; font-weight: 800; color: #2563eb;">
         ₹<span id="modalFeeAmount">0</span>
       </div>
