@@ -19,6 +19,11 @@ app.secret_key = os.environ.get('SECRET_KEY', 'hostel_management_super_secret_ke
 app.teardown_appcontext(close_connection)
 
 
+def hash_pw(password):
+    """Generate PBKDF2:SHA256 password hash compatible with all python versions."""
+    return generate_password_hash(password, method='pbkdf2:sha256')
+
+
 # -------------------------------------------------------------
 # Template Filters & Context Processors
 # -------------------------------------------------------------
@@ -294,7 +299,7 @@ def register():
                 flash("A parent account linked to this roll number or email already exists.", "warning")
                 return render_template('register.html', form=request.form)
 
-            pw_hash = generate_password_hash(password)
+            pw_hash = hash_pw(password)
             parent_id = modify_db("""
                 INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
                 VALUES (?, ?, ?, ?, 'parent', ?, ?, ?, 'Guardian', 0, 'Male')
@@ -336,7 +341,7 @@ def register():
                 flash("A student account with this Roll Number or Email already exists.", "warning")
                 return render_template('register.html', form=request.form)
 
-            pw_hash = generate_password_hash(password)
+            pw_hash = hash_pw(password)
             modify_db("""
                 INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
                 VALUES (?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?)
@@ -547,6 +552,8 @@ def student_outpass():
     """Digital leave/outpass request module for students."""
     user_id = session['user_id']
     user = query_db("SELECT * FROM users WHERE id = ?", (user_id,), one=True)
+    now = datetime.datetime.now()
+    min_datetime = now.strftime('%Y-%m-%dT%H:%M')
 
     if request.method == 'POST':
         departure_time = request.form.get('departure_time', '').strip()
@@ -558,12 +565,29 @@ def student_outpass():
         if not departure_time or not expected_return or not reason or not destination:
             flash("All leave details are required to submit an outpass request.", "danger")
         else:
-            modify_db("""
-                INSERT INTO outpasses (user_id, departure_time, expected_return, reason, destination, emergency_contact, parent_approval, status)
-                VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Pending')
-            """, (user_id, departure_time, expected_return, reason, destination, emergency_contact))
-            flash("Outpass application submitted successfully! Your parent can now approve it online before Warden authorization.", "success")
-            return redirect(url_for('student_outpass'))
+            # Block past dates: only current or future dates are allowed
+            is_valid_dates = True
+            try:
+                dep_dt = datetime.datetime.strptime(departure_time.replace('T', ' ')[:16], '%Y-%m-%d %H:%M')
+                ret_dt = datetime.datetime.strptime(expected_return.replace('T', ' ')[:16], '%Y-%m-%d %H:%M')
+                # 5-minute buffer so if user spends 1-2 mins filling form it doesn't block
+                buffer_time = now - datetime.timedelta(minutes=5)
+                if dep_dt < buffer_time:
+                    flash(f"Past dates cannot be selected. Outpass departure must be from today ({now.strftime('%d %b %Y')}) onwards.", "danger")
+                    is_valid_dates = False
+                elif ret_dt <= dep_dt:
+                    flash("Expected return date and time must be after departure date and time.", "danger")
+                    is_valid_dates = False
+            except Exception:
+                pass
+
+            if is_valid_dates:
+                modify_db("""
+                    INSERT INTO outpasses (user_id, departure_time, expected_return, reason, destination, emergency_contact, parent_approval, status)
+                    VALUES (?, ?, ?, ?, ?, ?, 'Pending', 'Pending')
+                """, (user_id, departure_time, expected_return, reason, destination, emergency_contact))
+                flash("Outpass application submitted successfully! Your parent can now approve it online before Warden authorization.", "success")
+                return redirect(url_for('student_outpass'))
 
     outpasses_list = query_db("""
         SELECT * FROM outpasses
@@ -571,7 +595,7 @@ def student_outpass():
         ORDER BY created_at DESC
     """, (user_id,))
 
-    return render_template('outpass.html', outpasses=outpasses_list, user=user)
+    return render_template('outpass.html', outpasses=outpasses_list, user=user, min_datetime=min_datetime)
 
 
 @app.route('/student/outpass/<int:outpass_id>/pass')
@@ -705,7 +729,7 @@ def profile():
                 UPDATE users
                 SET phone = ?, guardian_name = ?, guardian_phone = ?, password_hash = ?
                 WHERE id = ?
-            """, (phone, guardian_name, guardian_phone, generate_password_hash(new_password), user_id))
+            """, (phone, guardian_name, guardian_phone, hash_pw(new_password), user_id))
             flash("Profile and password updated successfully.", "success")
         else:
             modify_db("""
@@ -1689,8 +1713,8 @@ def admin_allot_room():
         flash(f"Room {room['room_number']} is already at full capacity ({room['capacity']} beds).", "danger")
         return redirect(url_for('admin_rooms'))
 
-    # Deactivate any previous active allotment
-    modify_db("UPDATE room_allotments SET status = 'Vacated' WHERE user_id = ?", (student_id,))
+    # Deactivate / remove any previous allotment for this student to respect UNIQUE constraint
+    modify_db("DELETE FROM room_allotments WHERE user_id = ?", (student_id,))
 
     # Insert new allotment
     modify_db("""

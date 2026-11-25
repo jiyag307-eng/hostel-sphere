@@ -6,6 +6,7 @@ Run: python test_app.py
 """
 
 import unittest
+import datetime
 from app import app
 from database import init_db, query_db
 import seed_data
@@ -117,9 +118,11 @@ class HostelAppTestCase(unittest.TestCase):
 
     def test_student_apply_outpass_and_view_pass(self):
         self.login('25001003043', 'student123')
+        future_dep = (datetime.datetime.now() + datetime.timedelta(days=2)).strftime('%Y-%m-%dT10:00')
+        future_ret = (datetime.datetime.now() + datetime.timedelta(days=3)).strftime('%Y-%m-%dT18:00')
         rv = self.client.post('/student/outpass', data=dict(
-            departure_time='2026-11-20T10:00',
-            expected_return='2026-11-21T18:00',
+            departure_time=future_dep,
+            expected_return=future_ret,
             destination='Gurugram Sector 29',
             emergency_contact='+91 98765 00001',
             reason='Visiting relatives for family function'
@@ -127,6 +130,37 @@ class HostelAppTestCase(unittest.TestCase):
         self.assertEqual(rv.status_code, 200)
         self.assertIn(b'Gurugram Sector 29', rv.data)
         self.logout()
+
+    def test_student_outpass_blocks_past_dates(self):
+        self.login('25001003043', 'student123')
+        rv = self.client.post('/student/outpass', data=dict(
+            departure_time='2020-01-01T10:00',
+            expected_return='2020-01-02T18:00',
+            destination='Past City',
+            emergency_contact='+91 98765 00001',
+            reason='Time travel'
+        ), follow_redirects=True)
+        self.assertEqual(rv.status_code, 200)
+        self.assertIn(b'Past dates cannot be selected', rv.data)
+        self.logout()
+
+    def test_student_registration_success(self):
+        rv = self.client.post('/register', data=dict(
+            account_type='student',
+            username='25001003099',
+            full_name='Aman Bansal',
+            email='aman.bansal@hostel.edu',
+            password='student123',
+            confirm_password='student123',
+            phone='+91 98765 43299',
+            guardian_name='Vinod Bansal',
+            guardian_phone='+91 98765 00099',
+            branch='Computer Engineering',
+            semester='1',
+            gender='Male'
+        ), follow_redirects=True)
+        self.assertEqual(rv.status_code, 200)
+        self.assertIn(b'Student registration successful', rv.data)
 
     # 4. Parent Outpass Approval Workflow
     def test_parent_outpass_approval_flow(self):

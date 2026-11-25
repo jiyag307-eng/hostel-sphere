@@ -38,7 +38,7 @@ def seed():
           "+91 98111 22334", "Admin Office", "+91 98111 22335", "Administration", 0, "Male"))
     admin_id = cur.lastrowid
 
-    # 2. Students
+    # 2. Students (10 students enrolled)
     student_pw = hash_pw("student123")
     students_data = [
         ("25001003043", "Jiyansh Sardana", "jiyansh@hostel.edu", student_pw, "student",
@@ -50,7 +50,17 @@ def seed():
         ("25001003046", "Priya Verma", "priya@hostel.edu", student_pw, "student",
          "+91 98765 43213", "Virender Verma", "+91 98765 00004", "Electronics & Comm.", 3, "Female"),
         ("25001003047", "Sneha Kapoor", "sneha@hostel.edu", student_pw, "student",
-         "+91 98765 43214", "Deepak Kapoor", "+91 98765 00005", "Computer Engineering", 3, "Female")
+         "+91 98765 43214", "Deepak Kapoor", "+91 98765 00005", "Computer Engineering", 3, "Female"),
+        ("25001003048", "Ananya Singh", "ananya@hostel.edu", student_pw, "student",
+         "+91 98765 43215", "Rajesh Singh", "+91 98765 00006", "Mechanical Engineering", 3, "Female"),
+        ("25001003049", "Rohan Gupta", "rohan@hostel.edu", student_pw, "student",
+         "+91 98765 43216", "Sanjay Gupta", "+91 98765 00007", "Electrical Engineering", 3, "Male"),
+        ("25001003050", "Ishita Malik", "ishita@hostel.edu", student_pw, "student",
+         "+91 98765 43217", "Harish Malik", "+91 98765 00008", "Civil Engineering", 5, "Female"),
+        ("25001003051", "Kabir Das", "kabir@hostel.edu", student_pw, "student",
+         "+91 98765 43218", "Kamal Das", "+91 98765 00009", "Computer Engineering", 5, "Male"),
+        ("25001003052", "Tanya Batra", "tanya@hostel.edu", student_pw, "student",
+         "+91 98765 43219", "Ashok Batra", "+91 98765 00010", "Information Technology", 1, "Female")
     ]
     student_ids = {}
     for data in students_data:
@@ -67,7 +77,9 @@ def seed():
         # (username, full_name, email, phone, ward_roll, relation)
         ("parent_25001003043", "Mr. Rakesh Sardana", "rakesh.sardana@example.com", "+91 98765 00001", "25001003043", "Father"),
         ("parent_25001003044", "Mr. Manoj Sharma", "manoj.sharma@example.com", "+91 98765 00002", "25001003044", "Father"),
-        ("parent_25001003046", "Mr. Virender Verma", "virender.verma@example.com", "+91 98765 00004", "25001003046", "Father")
+        ("parent_25001003046", "Mr. Virender Verma", "virender.verma@example.com", "+91 98765 00004", "25001003046", "Father"),
+        ("parent_25001003049", "Mr. Sanjay Gupta", "sanjay.gupta@example.com", "+91 98765 00007", "25001003049", "Father"),
+        ("parent_25001003050", "Mr. Harish Malik", "harish.malik@example.com", "+91 98765 00008", "25001003050", "Father")
     ]
     parent_ids = {}
     for p_user, p_name, p_email, p_phone, ward_roll, relation in parents_data:
@@ -114,17 +126,47 @@ def seed():
         VALUES (?, ?, ?, '2026-08-01', 'Active')
     """, (student_ids["25001003044"], room_ids["A-101"], 2))
 
-    # Aarav in A-102
+    # Aarav and Rohan in A-102
     cur.execute("""
         INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
         VALUES (?, ?, ?, '2026-08-05', 'Active')
     """, (student_ids["25001003045"], room_ids["A-102"], 1))
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-05', 'Active')
+    """, (student_ids["25001003049"], room_ids["A-102"], 2))
 
-    # Priya in B-101
+    # Priya and Sneha in B-101
     cur.execute("""
         INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
         VALUES (?, ?, ?, '2026-08-02', 'Active')
     """, (student_ids["25001003046"], room_ids["B-101"], 1))
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-02', 'Active')
+    """, (student_ids["25001003047"], room_ids["B-101"], 2))
+
+    # Ananya in B-102
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-04', 'Active')
+    """, (student_ids["25001003048"], room_ids["B-102"], 1))
+
+    # Kabir in A-103
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-06', 'Active')
+    """, (student_ids["25001003051"], room_ids["A-103"], 1))
+
+    # Ishita and Tanya in B-201
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-03', 'Active')
+    """, (student_ids["25001003050"], room_ids["B-201"], 1))
+    cur.execute("""
+        INSERT INTO room_allotments (user_id, room_id, bed_number, allotted_date, status)
+        VALUES (?, ?, ?, '2026-08-03', 'Active')
+    """, (student_ids["25001003052"], room_ids["B-201"], 2))
 
     print("Seeding notices...")
     notices_data = [
@@ -240,9 +282,21 @@ def seed():
          "Pending", None, None),
 
         # Pending outpass for Jiyansh Sardana so his parent can approve it right away!
-        (student_ids["25001003043"], "2026-11-25 10:00:00", "2026-11-26 18:00:00", None,
+        (student_ids["25001003043"], "2026-11-26 10:00:00", "2026-11-27 18:00:00", None,
          "Weekend home visit for family function and dental appointment", "Gurugram Sector 14, Haryana",
          "+91 98765 00001", "Pending", None,
+         "Pending", None, None),
+
+        # Outpass for Rohan Gupta (Pending Parent Approval)
+        (student_ids["25001003049"], "2026-11-28 08:30:00", "2026-11-29 20:00:00", None,
+         "Attending IEEE Technical Workshop at DTU Delhi", "DTU Campus, Shahbad Daulatpur, Delhi",
+         "+91 98765 00007", "Pending", None,
+         "Pending", None, None),
+
+        # Outpass for Ishita Malik (Parent Approved, Pending Warden)
+        (student_ids["25001003050"], "2026-11-27 15:00:00", "2026-11-28 19:00:00", None,
+         "Visiting hometown for sibling convocation ceremony", "Chandigarh Sector 35",
+         "+91 98765 00008", "Approved", "Family permission granted. Travel safely.",
          "Pending", None, None)
     ]
     for o in outpasses_data:
@@ -263,7 +317,13 @@ def seed():
         (student_ids["25001003044"], "Fall 2026 Mess Advance (Full Semester)", "Mess Fee", 18000.0, "2026-08-20", None, "Pending", None, None, None),
 
         (student_ids["25001003046"], "Semester 3 Girls Hostel Room (AC)", "Hostel Rent", 27000.0, "2026-08-15", "2026-08-08 14:10:00", "Paid", "UPI", "UPI55123901", "REC-2026-1004"),
-        (student_ids["25001003046"], "Fall 2026 Mess Charges", "Mess Fee", 18000.0, "2026-08-20", "2026-08-08 14:15:00", "Paid", "UPI", "UPI55123902", "REC-2026-1005")
+        (student_ids["25001003046"], "Fall 2026 Mess Charges", "Mess Fee", 18000.0, "2026-08-20", "2026-08-08 14:15:00", "Paid", "UPI", "UPI55123902", "REC-2026-1005"),
+
+        (student_ids["25001003048"], "Semester 3 Girls Hostel Room (Non-AC)", "Hostel Rent", 22500.0, "2026-08-15", "2026-08-12 10:00:00", "Paid", "UPI", "UPI77123909", "REC-2026-1006"),
+        (student_ids["25001003049"], "Semester 3 Boys Room A-102", "Hostel Rent", 22500.0, "2026-08-15", "2026-08-11 16:20:00", "Paid", "NetBanking", "NB99120344", "REC-2026-1007"),
+        (student_ids["25001003050"], "Semester 5 Girls Room B-201", "Hostel Rent", 19000.0, "2026-08-15", None, "Pending", None, None, None),
+        (student_ids["25001003051"], "Semester 5 Boys Room A-103", "Hostel Rent", 19000.0, "2026-08-15", "2026-08-09 11:30:00", "Paid", "Debit Card", "DC8812903", "REC-2026-1008"),
+        (student_ids["25001003052"], "Semester 1 First Year Hostel Allotment", "Hostel Rent", 19000.0, "2026-08-20", "2026-08-18 12:00:00", "Paid", "UPI", "UPI4419023", "REC-2026-1009")
     ]
     for f in fees_data:
         cur.execute("""
@@ -298,6 +358,18 @@ def seed():
             INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
             VALUES (?, ?, 'Present', '21:05', 'Girls Wing turnstile verified', ?)
         """, (student_ids["25001003046"], att_date, admin_id))
+
+        # Rohan
+        cur.execute("""
+            INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, 'Present', '21:10', 'Biometric check-in verified', ?)
+        """, (student_ids["25001003049"], att_date, admin_id))
+
+        # Ishita
+        cur.execute("""
+            INSERT OR REPLACE INTO attendance (user_id, date, status, check_in_time, remarks, marked_by)
+            VALUES (?, ?, 'Present', '21:18', 'Biometric check-in verified', ?)
+        """, (student_ids["25001003050"], att_date, admin_id))
 
     print("Seeding parent queries...")
     queries_data = [

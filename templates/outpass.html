@@ -21,12 +21,13 @@
       <form method="POST" action="{{ url_for('student_outpass') }}">
         <div class="form-group">
           <label class="form-label" for="departure_time">Departure Date & Time *</label>
-          <input type="datetime-local" id="departure_time" name="departure_time" class="form-control" required>
+          <input type="datetime-local" id="departure_time" name="departure_time" class="form-control" min="{{ min_datetime }}" required>
+          <small class="form-hint" style="color: var(--text-muted); font-size: 0.775rem;">Only today or future dates are allowed.</small>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="expected_return">Expected Return Date & Time *</label>
-          <input type="datetime-local" id="expected_return" name="expected_return" class="form-control" required>
+          <input type="datetime-local" id="expected_return" name="expected_return" class="form-control" min="{{ min_datetime }}" required>
         </div>
 
         <div class="form-group">
@@ -141,4 +142,37 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const depInput = document.getElementById('departure_time');
+  const retInput = document.getElementById('expected_return');
+  
+  // Current local date/time YYYY-MM-DDTHH:MM
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const localIso = now.getFullYear() + '-' +
+                   pad(now.getMonth() + 1) + '-' +
+                   pad(now.getDate()) + 'T' +
+                   pad(now.getHours()) + ':' +
+                   pad(now.getMinutes());
+
+  if (depInput) {
+    depInput.min = localIso;
+    depInput.addEventListener('change', function() {
+      if (depInput.value) {
+        retInput.min = depInput.value;
+        if (retInput.value && retInput.value < depInput.value) {
+          retInput.value = depInput.value;
+        }
+      }
+    });
+  }
+  if (retInput) {
+    retInput.min = localIso;
+  }
+});
+</script>
 {% endblock %}
