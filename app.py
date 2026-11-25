@@ -420,6 +420,19 @@ def mess_menu():
     return render_template('mess_menu.html', meals=meals, selected_day=selected_day)
 
 
+@app.route('/dashboard')
+def general_dashboard():
+    """Universal dashboard entrypoint redirecting to role-specific dashboard."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    role = session.get('role')
+    if role == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    elif role == 'parent':
+        return redirect(url_for('parent_dashboard'))
+    return redirect(url_for('student_dashboard'))
+
+
 # -------------------------------------------------------------
 # Student Portal Routes
 # -------------------------------------------------------------

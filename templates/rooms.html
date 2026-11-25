@@ -1,52 +1,61 @@
 {% extends 'base.html' %}
 
-{% block title %}My Room Details - HostelSphere{% endblock %}
+{% block title %}My Room Details – HostelSphere{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 2rem;">
-  <h1>🛏️ Room & Accommodation Details</h1>
-  <p style="color: var(--text-muted); margin: 0;">
-    View your current room allocation, bed number, room amenities, and roommate contact records.
+<div class="dashboard-header-block" style="margin-bottom: 2rem;">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+    <span class="badge" style="background: var(--yellow); color: var(--black); font-weight: 700;">Hostel Residence</span>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">Residential Allotment & Roommate Directory</span>
+  </div>
+  <h1 style="font-size: 2rem; font-weight: 800; color: var(--black); letter-spacing: -0.03em; margin: 0 0 0.35rem 0;">
+    Room & Accommodation Details
+  </h1>
+  <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+    View your assigned room specifications, bed allocation, amenities, and roommate contact records.
   </p>
 </div>
 
 {% if allotment %}
-  <div class="grid grid-cols-3" style="margin-bottom: 2rem;">
-    <!-- Room Specification Card -->
+  <div class="grid grid-cols-3" style="margin-bottom: 2rem; gap: 1.75rem; align-items: start;">
+    <!-- Room Specification Card (Span 2) -->
     <div style="grid-column: span 2;">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>🏢</span>
-            <span>Room {{ allotment.room_number }} Overview</span>
+      <div class="card" style="border: 1px solid var(--border-light); padding: 1.75rem;">
+        <div class="card-header" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light);">
+          <div>
+            <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--black); margin: 0 0 0.25rem 0;">Room {{ allotment.room_number }} Overview</h3>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">{{ allotment.block }} &bull; Floor {{ allotment.floor }}</span>
           </div>
-          <span class="badge badge-available">{{ allotment.room_type }} Room</span>
+          <span class="badge" style="background: var(--yellow); color: var(--black); font-weight: 700;">{{ allotment.room_type }} Room</span>
         </div>
 
-        <div class="grid grid-cols-3" style="margin-bottom: 1.5rem;">
-          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Hostel Block</span>
-            <strong style="font-size: 1.15rem; color: var(--text-main);">{{ allotment.block }}</strong>
+        <div class="grid grid-cols-3" style="gap: 1rem; margin-bottom: 1.75rem;">
+          <div style="background: var(--grey-light); padding: 1.25rem; border-radius: var(--radius-md);">
+            <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.25rem;">Hostel Block</span>
+            <strong style="font-size: 1.25rem; font-weight: 800; color: var(--black);">{{ allotment.block }}</strong>
           </div>
 
-          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Floor</span>
-            <strong style="font-size: 1.15rem; color: var(--text-main);">Floor {{ allotment.floor }}</strong>
+          <div style="background: var(--grey-light); padding: 1.25rem; border-radius: var(--radius-md);">
+            <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.25rem;">Floor</span>
+            <strong style="font-size: 1.25rem; font-weight: 800; color: var(--black);">Floor {{ allotment.floor }}</strong>
           </div>
 
-          <div style="background: #111827; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Your Assigned Bed</span>
-            <strong style="font-size: 1.15rem; color: var(--primary);">Bed #{{ allotment.bed_number }}</strong>
+          <div style="background: var(--black); padding: 1.25rem; border-radius: var(--radius-md); color: #FFFFFF;">
+            <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9CA3AF; font-weight: 700; display: block; margin-bottom: 0.25rem;">Your Assigned Bed</span>
+            <strong style="font-size: 1.25rem; font-weight: 800; color: var(--yellow);">Bed #{{ allotment.bed_number }}</strong>
           </div>
         </div>
 
-        <h4 style="margin-bottom: 0.5rem;">Room Description & Amenities</h4>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
-          {{ allotment.description or 'Furnished student room with study tables, beds, personal storage wardrobes, and attached washroom facility.' }}
+        <h4 style="font-size: 1rem; font-weight: 800; color: var(--black); margin-bottom: 0.35rem;">Room Description & Amenities</h4>
+        <p style="color: #4B5563; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.5;">
+          {{ allotment.description or 'Furnished student accommodation with individual study desks, orthopedic mattresses, personal storage wardrobes, and attached washroom facility.' }}
         </p>
 
         <!-- Roommates Section -->
-        <h4 style="margin-bottom: 0.75rem;">Allotted Roommates ({{ roommates|length }})</h4>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--black); margin: 0;">Assigned Roommates ({{ roommates|length }})</h4>
+        </div>
+
         {% if roommates %}
           <div class="table-responsive">
             <table class="table">
@@ -62,50 +71,50 @@
               <tbody>
                 {% for r in roommates %}
                   <tr>
-                    <td><span class="badge badge-in-progress">Bed #{{ r.bed_number }}</span></td>
-                    <td><strong>{{ r.full_name }}</strong></td>
-                    <td style="font-family: monospace;">{{ r.username }}</td>
+                    <td><span class="badge" style="background: var(--grey-light); color: var(--black); font-weight: 700;">Bed #{{ r.bed_number }}</span></td>
+                    <td><strong style="color: var(--black);">{{ r.full_name }}</strong></td>
+                    <td style="font-family: monospace; color: var(--text-muted);">{{ r.username }}</td>
                     <td>{{ r.branch }} (Sem {{ r.semester }})</td>
-                    <td><a href="tel:{{ r.phone }}">{{ r.phone or 'Not listed' }}</a></td>
+                    <td><a href="tel:{{ r.phone }}" style="font-weight: 600; color: var(--black);">{{ r.phone or 'Not listed' }}</a></td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
         {% else %}
-          <p style="color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">
+          <div style="padding: 1.5rem; background: var(--grey-light); border-radius: var(--radius-sm); color: var(--text-muted); font-size: 0.9rem;">
             No other roommates are currently allotted to this room.
-          </p>
+          </div>
         {% endif %}
       </div>
     </div>
 
     <!-- Quick Help & Hostel Contacts -->
     <div>
-      <div class="card">
-        <h3 style="margin-bottom: 1rem;">Hostel Helpdesk</h3>
-        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          For room exchange requests or urgent maintenance, reach out to the authorities below:
+      <div class="card" style="border: 1px solid var(--border-light); padding: 1.75rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--black); margin-bottom: 0.5rem;">Hostel Helpdesk</h3>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.4;">
+          For room exchange requests or urgent maintenance assistance:
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.875rem;">
-          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <strong>Chief Warden Office</strong>
-            <div style="color: var(--text-muted); font-size: 0.8rem;">Dr. Rajeshwar Sharma</div>
-            <div style="color: var(--primary); font-weight: 600; margin-top: 0.25rem;">📞 +91 98111 22334</div>
+          <div style="padding: 1rem; background: var(--grey-light); border-radius: var(--radius-sm);">
+            <strong style="color: var(--black); display: block; margin-bottom: 0.2rem;">Chief Warden Office</strong>
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.35rem;">Dr. Rajeshwar Sharma</div>
+            <div style="color: var(--black); font-weight: 700;">📞 +91 98111 22334</div>
           </div>
 
-          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <strong>Hostel Security Gate Booth</strong>
-            <div style="color: var(--text-muted); font-size: 0.8rem;">Available 24/7 for emergency reporting</div>
-            <div style="color: var(--primary); font-weight: 600; margin-top: 0.25rem;">📞 +91 98111 22335</div>
+          <div style="padding: 1rem; background: var(--grey-light); border-radius: var(--radius-sm);">
+            <strong style="color: var(--black); display: block; margin-bottom: 0.2rem;">Campus Security Gate</strong>
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.35rem;">Available 24/7 for emergency reporting</div>
+            <div style="color: var(--black); font-weight: 700;">📞 Ext. 101 / +91 98111 22339</div>
           </div>
 
-          <div style="padding: 0.75rem; background: #111827; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <strong>Maintenance Desk</strong>
-            <div style="color: var(--text-muted); font-size: 0.8rem;">Electrician, Plumber & Carpenter</div>
-            <a href="{{ url_for('student_complaints') }}" class="btn btn-sm btn-outline" style="margin-top: 0.5rem; width: 100%;">
-              Lodge Maintenance Ticket
+          <div style="padding: 1rem; background: var(--grey-light); border-radius: var(--radius-sm);">
+            <strong style="color: var(--black); display: block; margin-bottom: 0.2rem;">Maintenance Office</strong>
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.35rem;">Plumbing, electrical & carpentry</div>
+            <a href="{{ url_for('student_complaints') }}" class="btn btn-primary btn-sm" style="margin-top: 0.5rem; font-weight: 700; width: 100%; justify-content: center;">
+              Lodge Maintenance Ticket &rarr;
             </a>
           </div>
         </div>
@@ -113,13 +122,15 @@
     </div>
   </div>
 {% else %}
-  <div class="card" style="text-align: center; padding: 3.5rem 1.5rem;">
+  <div class="card" style="text-align: center; padding: 4rem 1.5rem; border: 1px solid var(--border-light);">
     <div style="font-size: 3.5rem; margin-bottom: 1rem;">🛏️</div>
-    <h2>No Active Room Allotment</h2>
-    <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem auto;">
-      You have not been assigned a hostel room yet. Please check back after the room allotment round is concluded or contact the Chief Warden office.
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--black); margin-bottom: 0.5rem;">No Room Currently Allotted</h2>
+    <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem auto; font-size: 0.95rem;">
+      Your resident account is active, but a hostel room allotment has not been registered by the administration yet.
     </p>
-    <a href="{{ url_for('notices') }}" class="btn btn-secondary">Check Allotment Notices</a>
+    <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary" style="font-weight: 700;">
+      Return to Dashboard
+    </a>
   </div>
 {% endif %}
 {% endblock %}

@@ -46,10 +46,11 @@
       text-align: left;
     }
     .receipt-table th {
-      background: #111827;
+      background: var(--grey-light);
       font-size: 0.8rem;
       text-transform: uppercase;
-      color: var(--text-muted);
+      color: var(--black);
+      font-weight: 700;
     }
     @media print {
       body { background: var(--bg-card); padding: 0; }
@@ -93,19 +94,19 @@
     </div>
 
     <!-- Student & Allotment Details -->
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: #111827; padding: 1rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: var(--grey-light); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem;">
       <div>
-        <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Student Details</span>
-        <strong style="color: var(--text-main); font-size: 1rem; display: block;">{{ student.full_name }}</strong>
-        <span style="color: var(--text-muted);">Roll No: <strong style="font-family: monospace;">{{ student.username }}</strong></span><br>
+        <span style="color: var(--text-muted); font-size: 0.725rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem;">Student Details</span>
+        <strong style="color: var(--black); font-size: 1.05rem; display: block;">{{ student.full_name }}</strong>
+        <span style="color: var(--text-muted);">Roll No: <strong style="font-family: monospace; color: var(--black);">{{ student.username }}</strong></span><br>
         <span style="color: var(--text-muted);">Branch: {{ student.branch or 'Engineering' }} (Sem {{ student.semester or '3' }})</span>
       </div>
 
       <div>
-        <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Hostel Residence</span>
-        <strong style="color: var(--text-main); font-size: 1rem; display: block;">Room {{ student.room_number or 'N/A' }}</strong>
+        <span style="color: var(--text-muted); font-size: 0.725rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem;">Hostel Residence</span>
+        <strong style="color: var(--black); font-size: 1.05rem; display: block;">Room {{ student.room_number or 'N/A' }}</strong>
         <span style="color: var(--text-muted);">Block: {{ student.block or 'Campus Block' }} (Bed #{{ student.bed_number or '1' }})</span><br>
-        <span style="color: var(--text-muted);">Payment Method: <strong>{{ fee.payment_method or 'Online' }}</strong></span>
+        <span style="color: var(--text-muted);">Payment Method: <strong style="color: var(--black);">{{ fee.payment_method or 'Online' }}</strong></span>
       </div>
     </div>
 
@@ -133,11 +134,11 @@
             ₹{{ "{:,.2f}".format(fee.amount) }}
           </td>
         </tr>
-        <tr style="background: #111827; font-size: 1.05rem;">
-          <td colspan="2" style="font-weight: 700; text-align: right;">
+        <tr style="background: var(--grey-light); font-size: 1.05rem;">
+          <td colspan="2" style="font-weight: 700; text-align: right; color: var(--black);">
             Grand Total Paid:
           </td>
-          <td style="text-align: right; font-weight: 800; color: #047857;">
+          <td style="text-align: right; font-weight: 800; color: #15803D;">
             ₹{{ "{:,.2f}".format(fee.amount) }}
           </td>
         </tr>

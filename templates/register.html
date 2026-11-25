@@ -1,22 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}Account Registration - HostelSphere{% endblock %}
+{% block title %}Create Account – HostelSphere{% endblock %}
 
 {% block content %}
-<div style="max-width: 680px; margin: 1.5rem auto;">
-  <div class="card" style="padding: 2.25rem;">
-    <div style="margin-bottom: 1.5rem; text-align: center;">
-      <h2 style="margin-bottom: 0.35rem;">HostelSphere Portal Registration</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">
-        Choose your account type to create your resident or parent access credentials.
+<div style="max-width: 640px; margin: 2rem auto;">
+  <div class="card" style="padding: 2.5rem 2.25rem; border: 1px solid var(--border-light); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); background: var(--white);">
+    <div style="margin-bottom: 2rem; text-align: center;">
+      <div style="width: 3.25rem; height: 3.25rem; background: var(--black); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <span style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.05em;">h.</span>
+      </div>
+      <h2 style="font-size: 1.65rem; font-weight: 800; color: var(--black); letter-spacing: -0.03em; margin: 0 0 0.35rem 0;">
+        Create your Account
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+        Register as an enrolled resident student or linked parent/guardian
       </p>
 
       <!-- Account Role Switcher -->
-      <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1.25rem;">
-        <button type="button" id="tab-student" class="btn btn-primary" onclick="switchRole('student')">
+      <div style="display: inline-flex; background: var(--grey-light); padding: 0.35rem; border-radius: 9999px; gap: 0.25rem; margin-top: 1.5rem;">
+        <button type="button" id="tab-student" class="btn btn-primary btn-sm" onclick="switchRole('student')" style="border-radius: 9999px; font-weight: 700; padding: 0.45rem 1.25rem;">
           🎓 Resident Student
         </button>
-        <button type="button" id="tab-parent" class="btn btn-secondary" onclick="switchRole('parent')">
+        <button type="button" id="tab-parent" class="btn btn-secondary btn-sm" onclick="switchRole('parent')" style="border-radius: 9999px; font-weight: 700; padding: 0.45rem 1.25rem;">
           👨‍👩‍👦 Parent / Guardian
         </button>
       </div>
@@ -26,9 +31,9 @@
       <input type="hidden" name="account_type" id="account_type" value="{{ form.account_type if form and form.account_type else 'student' }}">
 
       <!-- Common Fields: Full Name & Email -->
-      <div class="grid grid-cols-2">
+      <div class="grid grid-cols-2" style="gap: 1rem;">
         <div class="form-group">
-          <label class="form-label" for="full_name">Full Name *</label>
+          <label class="form-label" for="full_name">Full Legal Name *</label>
           <input type="text" id="full_name" name="full_name" class="form-control" 
                  placeholder="e.g. Ramesh Verma" value="{{ form.full_name if form else '' }}" required>
         </div>
@@ -42,7 +47,7 @@
 
       <!-- STUDENT-SPECIFIC SECTION -->
       <div id="student-fields">
-        <div class="grid grid-cols-2">
+        <div class="grid grid-cols-2" style="gap: 1rem;">
           <div class="form-group">
             <label class="form-label" for="username">University Roll Number *</label>
             <input type="text" id="username" name="username" class="form-control" 
@@ -56,11 +61,11 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3">
+        <div class="grid grid-cols-3" style="gap: 1rem;">
           <div class="form-group">
             <label class="form-label" for="branch">Engineering Branch</label>
             <input type="text" id="branch" name="branch" class="form-control" 
-                   placeholder="e.g. Computer Engineering" value="{{ form.branch if form else '' }}">
+                   placeholder="e.g. Computer Eng." value="{{ form.branch if form else '' }}">
           </div>
 
           <div class="form-group">
@@ -84,17 +89,20 @@
           </div>
         </div>
 
-        <div style="background: #111827; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
-          <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #d1d5db;">Guardian Verification Info (For Gate Outpass)</h4>
-          <div class="grid grid-cols-2" style="margin-bottom: 0;">
+        <!-- Guardian Info Strip for Student -->
+        <div style="background: var(--grey-light); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--black);">
+            👨‍👩‍👦 Guardian Verification Contact (For Outpass Authorization)
+          </h4>
+          <div class="grid grid-cols-2" style="gap: 1rem; margin-bottom: 0;">
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" for="guardian_name">Parent / Guardian Name</label>
-              <input type="text" id="guardian_name" name="guardian_name" class="form-control" 
-                     placeholder="e.g. Ramesh Verma" value="{{ form.guardian_name if form else '' }}">
+              <input type="text" id="guardian_name" name="guardian_name" class="form-control" style="background: var(--white);"
+                     placeholder="e.g. Kapil Sardana" value="{{ form.guardian_name if form else '' }}">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" for="guardian_phone">Guardian Contact Number</label>
-              <input type="tel" id="guardian_phone" name="guardian_phone" class="form-control" 
+              <input type="tel" id="guardian_phone" name="guardian_phone" class="form-control" style="background: var(--white);"
                      placeholder="+91 98765 11111" value="{{ form.guardian_phone if form else '' }}">
             </div>
           </div>
@@ -103,22 +111,24 @@
 
       <!-- PARENT-SPECIFIC SECTION -->
       <div id="parent-fields" style="display: none;">
-        <div style="background: #2d1b00; border: 1px solid #fef08a; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
-          <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #fcd34d;">Link with your Child / Ward</h4>
-          <p style="font-size: 0.85rem; color: #fbbf24; margin-bottom: 0.75rem;">
-            Enter the university roll number of your child who is currently enrolled as a resident student.
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.35rem; color: #92400E;">
+            Link with Enrolled Ward
+          </h4>
+          <p style="font-size: 0.85rem; color: #B45309; margin-bottom: 0.85rem;">
+            Enter the university roll number of your child who is currently enrolled in the hostel.
           </p>
 
-          <div class="grid grid-cols-2" style="margin-bottom: 0;">
+          <div class="grid grid-cols-2" style="gap: 1rem; margin-bottom: 0;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="ward_roll_number">Ward's Roll Number *</label>
-              <input type="text" id="ward_roll_number" name="ward_roll_number" class="form-control" 
+              <label class="form-label" for="ward_roll_number">Ward's University Roll No. *</label>
+              <input type="text" id="ward_roll_number" name="ward_roll_number" class="form-control" style="background: var(--white);"
                      placeholder="e.g. 25001003043" value="{{ form.ward_roll_number if form else '' }}">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" for="relationship">Relationship *</label>
-              <select id="relationship" name="relationship" class="form-select">
+              <select id="relationship" name="relationship" class="form-select" style="background: var(--white);">
                 <option value="Father">Father</option>
                 <option value="Mother">Mother</option>
                 <option value="Guardian">Local Guardian</option>
@@ -131,12 +141,12 @@
           <label class="form-label" for="parent_phone">Parent Mobile Number *</label>
           <input type="tel" id="parent_phone" name="parent_phone" class="form-control" 
                  placeholder="+91 98765 00000" value="{{ form.parent_phone if form else '' }}">
-          <div class="form-hint">Used for urgent SMS notifications, curfew alerts, and login.</div>
+          <div class="form-hint">Used for urgent security notifications and outpass verification.</div>
         </div>
       </div>
 
       <!-- Password Fields -->
-      <div class="grid grid-cols-2">
+      <div class="grid grid-cols-2" style="gap: 1rem;">
         <div class="form-group">
           <label class="form-label" for="password">Create Password *</label>
           <input type="password" id="password" name="password" class="form-control" 
@@ -150,14 +160,16 @@
         </div>
       </div>
 
-      <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">
-        Register Student Account
+      <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.75rem; font-size: 0.95rem;">
+        Complete Registration &rarr;
       </button>
     </form>
 
-    <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.9rem;">
+    <div style="text-align: center; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light); font-size: 0.875rem;">
       <span style="color: var(--text-muted);">Already registered?</span>
-      <a href="{{ url_for('login') }}" style="font-weight: 600; margin-left: 0.35rem;">Sign In Here &rarr;</a>
+      <a href="{{ url_for('login') }}" style="font-weight: 700; color: var(--black); margin-left: 0.35rem; text-decoration: underline;">
+        Sign In Here
+      </a>
     </div>
   </div>
 </div>
@@ -180,23 +192,22 @@ function switchRole(role) {
   if (role === 'parent') {
     studentFields.style.display = 'none';
     parentFields.style.display = 'block';
-    tabStudent.className = 'btn btn-secondary';
-    tabParent.className = 'btn btn-primary';
-    submitBtn.textContent = 'Register Parent Account';
+    tabStudent.className = 'btn btn-secondary btn-sm';
+    tabParent.className = 'btn btn-primary btn-sm';
+    submitBtn.textContent = 'Register Parent Account →';
     studentRoll.removeAttribute('required');
     wardRoll.setAttribute('required', 'required');
   } else {
     studentFields.style.display = 'block';
     parentFields.style.display = 'none';
-    tabStudent.className = 'btn btn-primary';
-    tabParent.className = 'btn btn-secondary';
-    submitBtn.textContent = 'Register Student Account';
+    tabStudent.className = 'btn btn-primary btn-sm';
+    tabParent.className = 'btn btn-secondary btn-sm';
+    submitBtn.textContent = 'Register Student Account →';
     studentRoll.setAttribute('required', 'required');
     wardRoll.removeAttribute('required');
   }
 }
 
-// Initialize on page load if reloaded with form errors
 document.addEventListener('DOMContentLoaded', function() {
   const currentRole = document.getElementById('account_type').value || 'student';
   switchRole(currentRole);

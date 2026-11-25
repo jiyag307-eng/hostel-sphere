@@ -1,58 +1,84 @@
 {% extends 'base.html' %}
 
-{% block title %}HostelConnect - JC Bose UST Campus Hostel Portal{% endblock %}
+{% block title %}HostelSphere – JC Bose UST Campus Hostel Portal{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-banner">
-  <div class="hero-content">
-    <span class="badge" style="background: rgba(255,255,255,0.15); color: #93c5fd; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.2);">
-      Official Residential Services &bull; JC Bose UST, YMCA Faridabad
-    </span>
-    <h1 class="hero-title">Hostel Accommodation & Student Services</h1>
-    <p class="hero-subtitle">
-      Welcome to the official hostel portal for residents, guardians, and administration. Check weekly mess schedules, request room maintenance, apply for weekend leave with parental verification, and review warden announcements.
+<!-- Modern Hero Section -->
+<section style="background: var(--white); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 3.5rem 2.5rem; margin-bottom: 2rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
+  <div style="max-width: 720px;">
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--grey-light); padding: 0.35rem 0.85rem; border-radius: 9999px; margin-bottom: 1.25rem;">
+      <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></span>
+      <span style="font-size: 0.775rem; font-weight: 700; color: var(--black); text-transform: uppercase; letter-spacing: 0.05em;">
+        Official Residential Services &bull; JC Bose UST, YMCA
+      </span>
+    </div>
+
+    <h1 style="font-size: 2.75rem; font-weight: 800; color: var(--black); letter-spacing: -0.04em; line-height: 1.15; margin: 0 0 1rem 0;">
+      Smart Hostel Management, Simplified.
+    </h1>
+
+    <p style="font-size: 1.05rem; color: #4B5563; line-height: 1.6; margin: 0 0 2rem 0;">
+      A unified digital portal for residents, guardians, and administration. Instant room allotments, real-time dining schedules, 2-tier parental leave verification, and prioritized maintenance ticketing.
     </p>
 
-    <div class="hero-actions">
+    <div style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center;">
       {% if current_user %}
         {% if current_user.role == 'student' %}
-          <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Student Dashboard &rarr;</a>
-          <a href="{{ url_for('student_complaints') }}" class="btn btn-secondary btn-lg">Lodge Complaint</a>
+          <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg" style="font-weight: 700;">
+            Go to Student Dashboard &rarr;
+          </a>
+          <a href="{{ url_for('student_outpass') }}" class="btn btn-secondary btn-lg" style="font-weight: 700;">
+            Apply for Outpass
+          </a>
         {% elif current_user.role == 'parent' %}
-          <a href="{{ url_for('parent_dashboard') }}" class="btn btn-primary btn-lg">Parent Portal &rarr;</a>
+          <a href="{{ url_for('parent_dashboard') }}" class="btn btn-primary btn-lg" style="font-weight: 700;">
+            Go to Parent Portal &rarr;
+          </a>
         {% else %}
-          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Warden Portal &rarr;</a>
-          <a href="{{ url_for('admin_outpass') }}" class="btn btn-secondary btn-lg">Review Outpasses</a>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg" style="font-weight: 700;">
+            Chief Warden Portal &rarr;
+          </a>
+          <a href="{{ url_for('admin_outpass') }}" class="btn btn-secondary btn-lg" style="font-weight: 700;">
+            Review Outpasses
+          </a>
         {% endif %}
       {% else %}
-        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Portal Sign In</a>
-        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg">Student & Parent Registration</a>
-        <a href="{{ url_for('notices') }}" class="btn btn-outline btn-lg" style="color: white; border-color: rgba(255,255,255,0.4);">Notice Board</a>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg" style="font-weight: 700;">
+          Portal Sign In &rarr;
+        </a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg" style="font-weight: 700;">
+          Create Account
+        </a>
+        <a href="{{ url_for('notices') }}" class="btn btn-secondary btn-lg" style="font-weight: 700;">
+          Notice Board
+        </a>
       {% endif %}
     </div>
   </div>
 </section>
 
-<!-- Demo Credentials Helper Box -->
+<!-- Demo Credentials Helper Box (For Public Visitors) -->
 {% if not current_user %}
-<div class="card" style="border-left: 4px solid var(--primary); background: #111827; margin-bottom: 2rem;">
+<div class="card" style="background: var(--grey-light); border: 1px solid var(--border-light); padding: 1.5rem 1.75rem; margin-bottom: 2rem;">
   <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
     <div>
-      <h4 style="margin-bottom: 0.25rem;">Portal Demo Accounts</h4>
-      <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">
-        Quick test accounts for evaluation:
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span style="font-size: 1rem;">⚡</span>
+        <h4 style="font-size: 1rem; font-weight: 800; color: var(--black); margin: 0;">Evaluation Quick Access</h4>
+      </div>
+      <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+        Pre-seeded credentials to explore role-specific features:
       </p>
     </div>
-    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
-        <strong>Admin/Warden:</strong> admin / admin123
-      </a>
-      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
+    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace; font-size: 0.8rem; font-weight: 600;">
         <strong>Student:</strong> 25001003043 / student123
       </a>
-      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
-        <strong>Parent:</strong> parent_rakesh / parent123
+      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace; font-size: 0.8rem; font-weight: 600;">
+        <strong>Parent:</strong> parent_25001003043 / parent123
+      </a>
+      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace; font-size: 0.8rem; font-weight: 600;">
+        <strong>Admin:</strong> admin / admin123
       </a>
     </div>
   </div>
@@ -60,142 +86,112 @@
 {% endif %}
 
 <!-- Key Metrics Grid -->
-<div class="grid grid-cols-3" style="margin-bottom: 2.5rem;">
-  <div class="stat-card">
-    <div class="stat-icon blue">🏢</div>
+<div class="grid grid-cols-3" style="gap: 1.5rem; margin-bottom: 2rem;">
+  <div class="card" style="padding: 1.5rem; border: 1px solid var(--border-light); display: flex; align-items: center; gap: 1.25rem;">
+    <div style="width: 3.25rem; height: 3.25rem; background: var(--grey-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+      🏢
+    </div>
     <div>
-      <div class="stat-val">{{ stats.total_rooms }}</div>
-      <div class="stat-lbl">Hostel Rooms Managed</div>
+      <div style="font-size: 1.75rem; font-weight: 800; color: var(--black); line-height: 1.1;">{{ stats.total_rooms }}</div>
+      <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Hostel Rooms Managed</div>
     </div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-icon purple">🎓</div>
+  <div class="card" style="padding: 1.5rem; border: 1px solid var(--border-light); display: flex; align-items: center; gap: 1.25rem;">
+    <div style="width: 3.25rem; height: 3.25rem; background: #FEF3C7; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+      🎓
+    </div>
     <div>
-      <div class="stat-val">{{ stats.total_students }}</div>
-      <div class="stat-lbl">Registered Residents</div>
+      <div style="font-size: 1.75rem; font-weight: 800; color: var(--black); line-height: 1.1;">{{ stats.total_students }}</div>
+      <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Registered Residents</div>
     </div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-icon green">✅</div>
+  <div class="card" style="padding: 1.5rem; border: 1px solid var(--border-light); display: flex; align-items: center; gap: 1.25rem;">
+    <div style="width: 3.25rem; height: 3.25rem; background: #DCFCE7; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+      ✅
+    </div>
     <div>
-      <div class="stat-val">{{ stats.resolved_complaints }}</div>
-      <div class="stat-lbl">Maintenance Tickets Resolved</div>
+      <div style="font-size: 1.75rem; font-weight: 800; color: var(--black); line-height: 1.1;">{{ stats.resolved_complaints }}</div>
+      <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Maintenance Tickets Resolved</div>
     </div>
   </div>
 </div>
 
 <!-- Two Column Main Content: Today's Mess & Pinned Notices -->
-<div class="grid grid-cols-2" style="margin-bottom: 2rem;">
+<div class="grid grid-cols-2" style="gap: 1.75rem; margin-bottom: 2rem;">
   <!-- Today's Mess Menu Widget -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>🍲</span>
-        <span>Today's Mess Schedule ({{ today }})</span>
+  <div class="card" style="border: 1px solid var(--border-light); padding: 1.75rem;">
+    <div class="card-header" style="margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-light);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">🍲</span>
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--black); margin: 0;">Today's Dining Schedule ({{ today }})</h3>
       </div>
-      <a href="{{ url_for('mess_menu') }}" class="btn btn-sm btn-outline">Full Week Menu &rarr;</a>
+      <a href="{{ url_for('mess_menu') }}" class="btn btn-sm btn-secondary" style="font-weight: 700;">
+        Full Week &rarr;
+      </a>
     </div>
 
     {% if today_meals %}
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        {% for meal in today_meals %}
-          <div style="padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #fafafa;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <span class="meal-badge meal-{{ meal.meal_type|lower }}">{{ meal.meal_type }}</span>
-              <span style="font-size: 0.775rem; color: var(--text-muted); font-weight: 600;">⏰ {{ meal.timings }}</span>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for m in today_meals %}
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--grey-light); border-radius: var(--radius-sm); gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--black);">{{ m.meal_type }}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">{{ m.timings }}</span>
+              </div>
+              <div style="font-size: 0.9rem; color: #4B5563;">{{ m.items }}</div>
             </div>
-            <p style="font-size: 0.925rem; font-weight: 500; margin: 0; color: var(--text-main);">
-              {{ meal.items }}
-            </p>
-            {% if meal.special_note %}
-              <small style="color: var(--primary); font-size: 0.775rem;">ℹ️ {{ meal.special_note }}</small>
+            {% if m.special_note %}
+              <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.7rem; font-weight: 700;">Special</span>
             {% endif %}
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No mess schedule found for today.</p>
+      <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+        No dining schedule uploaded for today.
+      </div>
     {% endif %}
   </div>
 
-  <!-- Recent Notices Widget -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>📢</span>
-        <span>Hostel Announcements</span>
+  <!-- Pinned Notices Widget -->
+  <div class="card" style="border: 1px solid var(--border-light); padding: 1.75rem;">
+    <div class="card-header" style="margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-light);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">📢</span>
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--black); margin: 0;">Campus Circulars</h3>
       </div>
-      <a href="{{ url_for('notices') }}" class="btn btn-sm btn-outline">All Notices &rarr;</a>
+      <a href="{{ url_for('notices') }}" class="btn btn-sm btn-secondary" style="font-weight: 700;">
+        View All &rarr;
+      </a>
     </div>
 
     {% if notices %}
       <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-        {% for notice in notices %}
-          <div style="padding: 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); {% if notice.is_pinned %}background: #0d1a0f; border-left: 3px solid var(--primary);{% endif %}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.35rem;">
-              <h4 style="font-size: 0.975rem; font-weight: 700; margin: 0;">
-                {% if notice.is_pinned %}📌 {% endif %}{{ notice.title }}
-              </h4>
-              <span class="badge badge-cat-{{ notice.category|lower }}">{{ notice.category }}</span>
+        {% for n in notices[:4] %}
+          <div style="padding: 0.85rem 1rem; background: var(--grey-light); border-radius: var(--radius-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--black); margin: 0;">{{ n.title }}</h4>
+              {% if n.is_pinned %}
+                <span class="badge" style="background: var(--yellow); color: var(--black); font-size: 0.675rem; font-weight: 800;">Pinned</span>
+              {% endif %}
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              {{ notice.content }}
+            <p style="font-size: 0.85rem; color: #4B5563; margin: 0 0 0.35rem 0; line-height: 1.4;">
+              {{ n.content[:110] }}{% if n.content|length > 110 %}...{% endif %}
             </p>
             <div style="font-size: 0.75rem; color: var(--text-muted);">
-              Published {{ notice.created_at|time_ago }} by {{ notice.author_name }}
+              {{ n.created_at|format_datetime }} &bull; {{ n.category }}
             </div>
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No announcements posted currently.</p>
+      <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+        No circulars published at this time.
+      </div>
     {% endif %}
-  </div>
-</div>
-
-<!-- Features Overview / Practical Highlights -->
-<div class="card" style="padding: 2.25rem;">
-  <div style="text-align: center; max-width: 650px; margin: 0 auto 2rem auto;">
-    <h2 style="margin-bottom: 0.5rem;">Hostel Facilities & Student Services</h2>
-    <p style="color: var(--text-muted); font-size: 0.95rem;">
-      Essential residential accommodation services connecting students, guardians, and hostel caretakers.
-    </p>
-  </div>
-
-  <div class="grid grid-cols-4">
-    <div style="text-align: center; padding: 1rem;">
-      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🛏️</div>
-      <h4>Room Allotments</h4>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Check allocated room specifications, bed numbers, and verified roommate contact info.
-      </p>
-    </div>
-
-    <div style="text-align: center; padding: 1rem;">
-      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🛠️</div>
-      <h4>Maintenance Desk</h4>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Report plumbing, electrical, or Wi-Fi repairs directly with real-time status updates from staff.
-      </p>
-    </div>
-
-    <div style="text-align: center; padding: 1rem;">
-      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🎫</div>
-      <h4>Parent-Verified Outpasses</h4>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        2-step leave applications verified by parents before warden clearance and gate pass issuance.
-      </p>
-    </div>
-
-    <div style="text-align: center; padding: 1rem;">
-      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🍽️</div>
-      <h4>Weekly Mess Timetable</h4>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        7-day breakfast, lunch, evening tea, and dinner menus with serving timings and special dishes.
-      </p>
-    </div>
   </div>
 </div>
 {% endblock %}

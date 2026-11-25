@@ -51,6 +51,49 @@ def ensure_db_ready():
                 except Exception as e:
                     print("Notice: Error initializing /tmp database:", e)
 
+    # Always ensure schema and required columns are present on any environment
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cur = conn.cursor()
+        cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='users'")
+        has_users_table = cur.fetchone()[0]
+        if not has_users_table:
+            with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
+                conn.executescript(f.read())
+            conn.commit()
+            import seed_data
+            seed_data.seed()
+        else:
+            # Check user count; if 0, run seed
+            cur.execute("SELECT count(*) FROM users")
+            user_count = cur.fetchone()[0]
+            if user_count == 0:
+                import seed_data
+                seed_data.seed()
+
+            # Ensure outpasses table has all columns
+            cur.execute("PRAGMA table_info(outpasses)")
+            outpass_cols = [row[1] for row in cur.fetchall()]
+            if 'parent_approval' not in outpass_cols:
+                try:
+                    cur.execute("ALTER TABLE outpasses ADD COLUMN parent_approval TEXT DEFAULT 'Pending'")
+                except Exception:
+                    pass
+            if 'parent_remarks' not in outpass_cols:
+                try:
+                    cur.execute("ALTER TABLE outpasses ADD COLUMN parent_remarks TEXT")
+                except Exception:
+                    pass
+            if 'parent_action_at' not in outpass_cols:
+                try:
+                    cur.execute("ALTER TABLE outpasses ADD COLUMN parent_action_at TIMESTAMP")
+                except Exception:
+                    pass
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Notice: Database verification check:", e)
+
 
 # Run verification on import
 ensure_db_ready()

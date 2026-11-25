@@ -1,70 +1,154 @@
 {% extends 'base.html' %}
 
-{% block title %}Administrator Dashboard - HostelSphere{% endblock %}
+{% block title %}Administrator Dashboard – HostelSphere{% endblock %}
 
 {% block content %}
-<!-- Admin Header -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+<!-- Top Header & Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1 style="font-size: 1.85rem; margin-bottom: 0.25rem;">Hostel Administration Console 🛡️</h1>
-    <p style="color: var(--text-muted); margin: 0; font-size: 0.95rem;">
-      Welcome, <strong>{{ current_user.full_name }}</strong> &bull; Complete operational control over facilities, students, and requests.
+    <h1 style="font-size: 1.85rem; margin-bottom: 0.25rem; font-weight: 800; letter-spacing: -0.03em;">
+      Hostel Administration Console 🛡️
+    </h1>
+    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem; font-weight: 500;">
+      Logged in as: <strong style="color: var(--black);">{{ current_user.full_name }}</strong> &bull; Complete operational oversight across facilities, leaves, and collections
     </p>
   </div>
 
-  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-    <a href="{{ url_for('admin_fees') }}" class="btn btn-outline">💳 Fee Collections</a>
-    <a href="{{ url_for('admin_attendance') }}" class="btn btn-outline">🕒 Roll Call</a>
-    <a href="{{ url_for('admin_parent_queries') }}" class="btn btn-secondary">✉️ Parent Desk</a>
-    <a href="{{ url_for('admin_outpass') }}" class="btn btn-primary">🎫 Outpasses</a>
+  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+    <a href="{{ url_for('admin_outpass') }}" class="btn btn-primary btn-sm">
+      <span>🎫</span> Pending Gate Outpasses
+      {% if stats.pending_outpasses > 0 %}
+        <span style="background: var(--black); color: var(--white); font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: var(--radius-full); margin-left: 0.25rem;">
+          {{ stats.pending_outpasses }}
+        </span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('admin_new_notice') }}" class="btn btn-dark btn-sm">
+      <span>📢</span> + Post Notice
+    </a>
+    <a href="{{ url_for('admin_fees') }}" class="btn btn-secondary btn-sm">
+      <span>💳</span> Collections
+    </a>
+    <a href="{{ url_for('admin_attendance') }}" class="btn btn-secondary btn-sm">
+      <span>🕒</span> Roll Call
+    </a>
   </div>
 </div>
 
-<!-- Executive Stats Grid -->
-<div class="grid grid-cols-4" style="margin-bottom: 2rem;">
-  <div class="stat-card">
-    <div class="stat-icon blue">🎓</div>
-    <div>
-      <div class="stat-val">{{ stats.total_students }}</div>
-      <div class="stat-lbl">Registered Students</div>
-    </div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-icon purple">🏢</div>
-    <div>
-      <div class="stat-val">{{ stats.occupancy_pct }}%</div>
-      <div class="stat-lbl">{{ stats.occupied_beds }} / {{ stats.total_capacity }} Beds Occupied</div>
-    </div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-icon green">💳</div>
-    <div>
-      <div class="stat-val">₹{{ "{:,.0f}".format(stats.total_fee_collected|default(0)) }}</div>
-      <div class="stat-lbl">Fees Collected</div>
-    </div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-icon amber">✉️</div>
-    <div>
-      <div class="stat-val">{{ stats.pending_parent_queries|default(0) }}</div>
-      <div class="stat-lbl">Parent Queries Pending</div>
-    </div>
-  </div>
-</div>
-
-<!-- Two-Column Workbench: Pending Approvals & Complaints -->
-<div class="grid grid-cols-2">
-  <!-- Pending Outpass Applications -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>🎫</span>
-        <span>Pending Gate Outpasses ({{ stats.pending_outpasses }})</span>
+<!-- 4 Top Stat Cards (Black Card, Yellow Card, 2 White Cards) -->
+<div class="grid grid-cols-4" style="margin-bottom: 1.75rem;">
+  
+  <!-- Signature Pitch Black Card (Occupancy & Beds) -->
+  <div class="card-black">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+      <div>
+        <div style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--yellow); font-weight: 800; margin-bottom: 0.25rem;">
+          Hostel Occupancy
+        </div>
+        <h3 style="font-size: 1.45rem; font-weight: 800; color: white; margin: 0;">
+          {{ stats.occupancy_pct }}%
+        </h3>
       </div>
-      <a href="{{ url_for('admin_outpass') }}" class="btn btn-sm btn-outline">All Requests &rarr;</a>
+      <span style="font-size: 1.4rem;">🏢</span>
+    </div>
+
+    <p class="card-subtitle" style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+      {{ stats.occupied_beds }} / {{ stats.total_capacity }} Beds Allotted ({{ stats.total_rooms }} Rooms)
+    </p>
+
+    <div class="progress-container">
+      <div class="progress-header">
+        <span class="progress-label" style="color: #888888;">Capacity Filled</span>
+        <span class="progress-percent">{{ stats.occupancy_pct }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ stats.occupancy_pct }}%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signature Golden Yellow Card (Pending Outpasses) -->
+  <div class="card-yellow">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+      <div>
+        <div style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: #333333; font-weight: 800; margin-bottom: 0.25rem;">
+          Gate Outpasses
+        </div>
+        <h3 style="font-size: 1.45rem; font-weight: 800; color: var(--black); margin: 0;">
+          {{ stats.pending_outpasses }} Pending
+        </h3>
+      </div>
+      <span style="font-size: 1.4rem;">🎫</span>
+    </div>
+
+    <p style="font-size: 0.8rem; color: #444444; margin-bottom: 0.75rem;">
+      Student leave requests awaiting Chief Warden authorization
+    </p>
+
+    <a href="{{ url_for('admin_outpass') }}" class="btn btn-dark btn-sm" style="width: 100%; border-radius: var(--radius-sm); text-align: center;">
+      Review Outpasses &rarr;
+    </a>
+  </div>
+
+  <!-- Pure White Card: Registered Students -->
+  <div class="card" style="margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+      <div>
+        <div style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 0.25rem;">
+          Resident Students
+        </div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--black); margin: 0;">
+          {{ stats.total_students }}
+        </h3>
+      </div>
+      <span class="stat-icon yellow" style="width: 2.5rem; height: 2.5rem; font-size: 1.1rem;">🎓</span>
+    </div>
+
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+      Enrolled across Block A (Boys) and Block B (Girls)
+    </p>
+
+    <a href="{{ url_for('admin_students') }}" class="btn btn-secondary btn-sm" style="width: 100%; border-radius: var(--radius-sm); text-align: center;">
+      Student Roster &rarr;
+    </a>
+  </div>
+
+  <!-- Pure White Card: Fees Collected & Queries -->
+  <div class="card" style="margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+      <div>
+        <div style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 0.25rem;">
+          Fees Collected
+        </div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--black); margin: 0;">
+          ₹{{ "{:,.0f}".format(stats.total_fee_collected) }}
+        </h3>
+      </div>
+      <span class="stat-icon green" style="width: 2.5rem; height: 2.5rem; font-size: 1.1rem;">💳</span>
+    </div>
+
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+      {{ stats.pending_parent_queries }} parent inquiry tickets awaiting reply
+    </p>
+
+    <a href="{{ url_for('admin_fees') }}" class="btn btn-secondary btn-sm" style="width: 100%; border-radius: var(--radius-sm); text-align: center;">
+      Billing Overview &rarr;
+    </a>
+  </div>
+
+</div>
+
+<!-- Two-Column Workbench: Pending Outpasses Table + Complaints Feed -->
+<div class="grid grid-cols-2" style="margin-bottom: 1.75rem;">
+  
+  <!-- Pending Gate Outpasses Table -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <div>
+        <div class="card-title">🎫 Pending Gate Outpasses ({{ stats.pending_outpasses }})</div>
+        <div class="card-subtitle">Authorize leaves with parental consent verification</div>
+      </div>
+      <a href="{{ url_for('admin_outpass') }}" class="btn btn-secondary btn-sm">All Requests &rarr;</a>
     </div>
 
     {% if recent_outpasses %}
@@ -75,39 +159,37 @@
               <th>Student</th>
               <th>Destination</th>
               <th>Parent Consent</th>
-              <th>Action</th>
+              <th style="text-align: right;">Action</th>
             </tr>
           </thead>
           <tbody>
             {% for o in recent_outpasses %}
               <tr>
                 <td>
-                  <strong>{{ o.student_name }}</strong>
+                  <strong style="color: var(--black); font-size: 0.9rem;">{{ o.student_name }}</strong>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">
                     Roll: {{ o.roll_number }} &bull; Room: {{ o.room_number or 'N/A' }}
                   </div>
                 </td>
                 <td>
-                  <strong>{{ o.destination }}</strong>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    {{ o.reason }}
+                  <span style="font-weight: 600; color: var(--text-main); font-size: 0.85rem;">{{ o.destination }}</span>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    {{ o.departure_time|format_datetime }}
                   </div>
                 </td>
                 <td>
                   {% if o.parent_approval == 'Approved' %}
-                    <span class="badge badge-parent-approved">✓ Approved</span>
+                    <span class="badge badge-parent-approved">✓ Consent Verified</span>
                   {% elif o.parent_approval == 'Rejected' %}
-                    <span class="badge badge-parent-rejected">✕ Rejected</span>
+                    <span class="badge badge-parent-rejected">✕ Denied</span>
                   {% else %}
-                    <span class="badge badge-parent-pending">⏳ Pending</span>
+                    <span class="badge badge-parent-pending">⏳ Pending Parent</span>
                   {% endif %}
                 </td>
-                <td>
-                  <form method="POST" action="{{ url_for('admin_review_outpass', outpass_id=o.id) }}" style="display: flex; gap: 0.35rem;">
-                    <input type="hidden" name="admin_remarks" value="Approved by Chief Warden Office.">
-                    <button type="submit" name="decision" value="Approved" class="btn btn-sm btn-success" title="Approve Outpass">✓</button>
-                    <button type="submit" name="decision" value="Rejected" class="btn btn-sm btn-danger" title="Reject Outpass">✕</button>
-                  </form>
+                <td style="text-align: right;">
+                  <a href="{{ url_for('admin_outpass') }}" class="btn btn-sm btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">
+                    Review &rarr;
+                  </a>
                 </td>
               </tr>
             {% endfor %}
@@ -115,61 +197,63 @@
         </table>
       </div>
     {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 2rem 0; margin: 0;">
-        No pending outpasses requiring action. All clear! ✨
-      </p>
+      <div style="text-align: center; padding: 2.5rem 1rem;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✨</span>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">No outpass applications waiting for clearance.</p>
+      </div>
     {% endif %}
   </div>
 
-  <!-- Critical Maintenance Complaints -->
-  <div class="card">
+  <!-- Priority Maintenance Complaints -->
+  <div class="card" style="margin-bottom: 0;">
     <div class="card-header">
-      <div class="card-title">
-        <span>🛠️</span>
-        <span>High Priority Maintenance</span>
+      <div>
+        <div class="card-title">🛠️ Maintenance Complaints ({{ stats.pending_complaints }})</div>
+        <div class="card-subtitle">Pending repair and housekeeping tickets</div>
       </div>
-      <a href="{{ url_for('admin_complaints') }}" class="btn btn-sm btn-outline">Manage Tickets &rarr;</a>
+      <a href="{{ url_for('admin_complaints') }}" class="btn btn-secondary btn-sm">All Complaints &rarr;</a>
     </div>
 
     {% if recent_complaints %}
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Issue & Location</th>
-              <th>Student</th>
-              <th>Priority</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in recent_complaints %}
-              <tr>
-                <td>
-                  <strong>{{ c.title }}</strong>
-                  <div style="font-size: 0.75rem; color: var(--text-muted);">
-                    📍 Room {{ c.room_number or 'Common' }} &bull; {{ c.category }}
-                  </div>
-                </td>
-                <td style="font-size: 0.825rem;">
-                  {{ c.student_name }}
-                </td>
-                <td>
-                  <span class="badge badge-priority-{{ c.priority|lower }}">{{ c.priority }}</span>
-                </td>
-                <td>
-                  <span class="badge badge-{{ c.status|lower|replace(' ', '-') }}">{{ c.status }}</span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+        {% for c in recent_complaints %}
+          <div style="padding: 0.85rem 1rem; border: 1px solid var(--grey-border-light); border-radius: var(--radius-md); background: var(--white);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
+              <div>
+                <strong style="font-size: 0.9rem; color: var(--black);">{{ c.title }}</strong>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                  By: {{ c.student_name }} (Room {{ c.room_number or 'N/A' }}) &bull; Category: {{ c.category }}
+                </div>
+              </div>
+              <div>
+                {% if c.priority == 'Urgent' %}
+                  <span class="badge badge-rejected">Urgent</span>
+                {% elif c.priority == 'High' %}
+                  <span class="badge badge-pending">High</span>
+                {% else %}
+                  <span class="badge badge-in-progress">{{ c.priority }}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.775rem;">
+              <span style="color: var(--text-secondary); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ c.description }}
+              </span>
+              <a href="{{ url_for('admin_complaints') }}" class="btn btn-sm btn-dark" style="font-size: 0.725rem; padding: 0.2rem 0.55rem;">
+                Resolve &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
       </div>
     {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 2rem 0; margin: 0;">
-        No maintenance complaints currently reported.
-      </p>
+      <div style="text-align: center; padding: 2.5rem 1rem;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🎉</span>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">All student maintenance complaints resolved.</p>
+      </div>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}

@@ -1,28 +1,37 @@
 {% extends 'base.html' %}
 
-{% block title %}Gate Outpass Workflow - HostelSphere{% endblock %}
+{% block title %}Gate Outpass Workflow – HostelSphere{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+<div class="dashboard-header-block" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1>🎫 Digital Leave & Gate Outpass</h1>
-    <p style="color: var(--text-muted); margin: 0;">
-      Submit leave requests for warden approval and generate digital security passes.
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+      <span class="badge" style="background: var(--yellow); color: var(--black); font-weight: 700;">2-Tier Verification</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Parental Consent + Warden Authorization</span>
+    </div>
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--black); letter-spacing: -0.03em; margin: 0 0 0.35rem 0;">
+      Digital Leave & Outpass
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Apply for campus leave, track real-time parent verification, and generate authenticated security gate passes.
     </p>
   </div>
 </div>
 
-<div class="grid grid-cols-3">
-  <!-- Apply for Outpass Form -->
+<div class="grid grid-cols-3" style="align-items: start; gap: 1.75rem;">
+  <!-- Apply for Outpass Form Card -->
   <div>
-    <div class="card" style="position: sticky; top: 5.5rem;">
-      <h3 style="margin-bottom: 1.25rem;">Apply for Outpass</h3>
+    <div class="card" style="position: sticky; top: 5.5rem; border: 1px solid var(--border-light); padding: 1.75rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--black); margin: 0;">Apply for Outpass</h3>
+        <span class="role-tag student">New Request</span>
+      </div>
 
       <form method="POST" action="{{ url_for('student_outpass') }}">
         <div class="form-group">
           <label class="form-label" for="departure_time">Departure Date & Time *</label>
           <input type="datetime-local" id="departure_time" name="departure_time" class="form-control" min="{{ min_datetime }}" required>
-          <small class="form-hint" style="color: var(--text-muted); font-size: 0.775rem;">Only today or future dates are allowed.</small>
+          <small class="form-hint" style="color: var(--text-muted); font-size: 0.775rem;">Only current or future dates are allowed.</small>
         </div>
 
         <div class="form-group">
@@ -37,93 +46,107 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="emergency_contact">Emergency / Guardian Phone *</label>
+          <label class="form-label" for="emergency_contact">Emergency / Guardian Contact *</label>
           <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control" 
                  value="{{ user.guardian_phone or user.phone or '' }}" placeholder="+91 98765 00000" required>
-          <div class="form-hint">Warden will verify with this contact for overnight leave.</div>
+          <div class="form-hint">Parent confirmation will be verified through this contact.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="reason">Detailed Reason for Leave *</label>
-          <textarea id="reason" name="reason" class="form-control" 
-                    placeholder="e.g. Visiting hometown for sibling's wedding / Academic workshop..." required></textarea>
+          <textarea id="reason" name="reason" class="form-control" rows="3"
+                    placeholder="e.g. Visiting hometown for family event / Academic workshop..." required></textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          Submit Outpass Application
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.5rem;">
+          Submit Application &rarr;
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Outpass History & Active Passes -->
+  <!-- Outpass History & Active Passes (Span 2) -->
   <div style="grid-column: span 2;">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <span>📜</span>
-          <span>Outpass Records</span>
+    <div class="card" style="border: 1px solid var(--border-light); padding: 1.75rem;">
+      <div class="card-header" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light);">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--black); margin: 0 0 0.25rem 0;">My Outpass History</h3>
+          <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">Track approval progress and access authorized digital passes.</p>
         </div>
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
-          {{ outpasses|length }} Applications
+        <span class="role-tag student">
+          {{ outpasses|length }} Application{% if outpasses|length != 1 %}s{% endif %}
         </span>
       </div>
 
       {% if outpasses %}
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
           {% for o in outpasses %}
-            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-card); box-shadow: var(--shadow-sm); {% if o.status == 'Approved' %}border-left: 4px solid var(--success);{% elif o.status == 'Pending' %}border-left: 4px solid var(--warning);{% endif %}">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
+            <div style="border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; background: var(--white); box-shadow: var(--shadow-sm); transition: var(--transition);">
+              <!-- Top Row: Destination + Status Badges -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
                 <div>
-                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                    <h3 style="font-size: 1.15rem; margin: 0;">{{ o.destination }}</h3>
-                    <span class="badge badge-{{ o.status|lower }}">Warden: {{ o.status }}</span>
-                    {% if o.parent_approval == 'Approved' %}
-                      <span class="badge badge-parent-approved">✓ Parent Approved</span>
-                    {% elif o.parent_approval == 'Rejected' %}
-                      <span class="badge badge-parent-rejected">✕ Parent Rejected</span>
+                  <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--black); margin: 0;">{{ o.destination }}</h3>
+                    
+                    <!-- Warden Status Badge -->
+                    {% if o.status == 'Approved' %}
+                      <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 700;">✓ Warden: Approved</span>
+                    {% elif o.status == 'Rejected' %}
+                      <span class="badge" style="background: #FEE2E2; color: #B91C1C; font-weight: 700;">✕ Warden: Rejected</span>
+                    {% elif o.status == 'Returned' %}
+                      <span class="badge" style="background: var(--grey-light); color: var(--black); font-weight: 700;">↩ Returned</span>
                     {% else %}
-                      <span class="badge badge-parent-pending">⏳ Pending Parent Approval</span>
+                      <span class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700;">⏳ Warden: Pending</span>
+                    {% endif %}
+
+                    <!-- Parent Consent Badge -->
+                    {% if o.parent_approval == 'Approved' %}
+                      <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 700;">✓ Parent Approved</span>
+                    {% elif o.parent_approval == 'Rejected' %}
+                      <span class="badge" style="background: #FEE2E2; color: #B91C1C; font-weight: 700;">✕ Parent Rejected</span>
+                    {% else %}
+                      <span class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700;">⏳ Awaiting Parent Consent</span>
                     {% endif %}
                   </div>
                   <div style="font-size: 0.825rem; color: var(--text-muted);">
-                    Applied on {{ o.created_at|format_datetime }}
+                    Applied on {{ o.created_at|format_datetime }} &bull; Emergency Contact: {{ o.emergency_contact }}
                   </div>
                 </div>
 
                 {% if o.status == 'Approved' %}
-                  <a href="{{ url_for('view_gate_pass', outpass_id=o.id) }}" class="btn btn-sm btn-success" target="_blank">
-                    📄 Print Gate Pass
+                  <a href="{{ url_for('view_gate_pass', outpass_id=o.id) }}" class="btn btn-primary btn-sm" target="_blank" style="font-weight: 700;">
+                    🎫 View Gate Pass &rarr;
                   </a>
                 {% endif %}
               </div>
 
-              <!-- Departure & Return Timing Pill -->
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: #111827; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem;">
+              <!-- Departure & Return Timing Strip -->
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: var(--grey-light); padding: 1rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
                 <div>
-                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Departure</span>
-                  <strong style="color: var(--text-main); font-size: 0.9rem;">{{ o.departure_time|format_datetime }}</strong>
+                  <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.25rem;">Departure Date & Time</span>
+                  <strong style="color: var(--black); font-size: 0.95rem; font-weight: 700;">{{ o.departure_time|format_datetime }}</strong>
                 </div>
                 <div>
-                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Expected Return</span>
-                  <strong style="color: var(--text-main); font-size: 0.9rem;">{{ o.expected_return|format_datetime }}</strong>
+                  <span style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.25rem;">Expected Return Deadline</span>
+                  <strong style="color: var(--black); font-size: 0.95rem; font-weight: 700;">{{ o.expected_return|format_datetime }}</strong>
                 </div>
               </div>
 
-              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                <strong>Reason:</strong> {{ o.reason }}
+              <!-- Reason -->
+              <p style="font-size: 0.9rem; color: #4B5563; margin: 0 0 0.75rem 0; line-height: 1.5;">
+                <strong style="color: var(--black);">Reason:</strong> {{ o.reason }}
               </p>
 
               <!-- Parent & Warden Notes -->
               {% if o.parent_remarks %}
-                <div style="font-size: 0.85rem; padding: 0.45rem 0.75rem; background: #2d1b00; border: 1px solid #fef08a; border-radius: var(--radius-sm); color: #fcd34d; margin-top: 0.5rem;">
+                <div style="font-size: 0.85rem; padding: 0.65rem 1rem; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm); color: #92400E; margin-top: 0.5rem;">
                   <strong>👨‍👩‍👦 Parent Remarks:</strong> {{ o.parent_remarks }}
-                  {% if o.parent_action_at %}<span style="color: #a16207; font-size: 0.775rem;"> &bull; {{ o.parent_action_at|format_datetime }}</span>{% endif %}
+                  {% if o.parent_action_at %}<span style="color: #B45309; font-size: 0.775rem;"> &bull; {{ o.parent_action_at|format_datetime }}</span>{% endif %}
                 </div>
               {% endif %}
 
               {% if o.admin_remarks %}
-                <div style="font-size: 0.85rem; padding: 0.5rem 0.75rem; background: #eff6ff; border-radius: var(--radius-sm); color: #1e40af; margin-top: 0.5rem;">
+                <div style="font-size: 0.85rem; padding: 0.65rem 1rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); color: #1E40AF; margin-top: 0.5rem;">
                   <strong>🛡️ Warden Note:</strong> {{ o.admin_remarks }}
                 </div>
               {% endif %}
@@ -131,11 +154,11 @@
           {% endfor %}
         </div>
       {% else %}
-        <div style="text-align: center; padding: 3rem 1rem;">
-          <div style="font-size: 3rem; margin-bottom: 0.75rem;">🎫</div>
-          <h3>No Outpass Requests</h3>
-          <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">
-            Need to leave campus for the weekend or an official event? Fill out the application on the left.
+        <div style="text-align: center; padding: 4rem 1rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎫</div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--black); margin-bottom: 0.5rem;">No Outpass Applications Yet</h3>
+          <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto 1.5rem auto; font-size: 0.9rem;">
+            Need to leave campus for weekend visits or official work? Complete the application form on the left.
           </p>
         </div>
       {% endif %}
@@ -150,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const depInput = document.getElementById('departure_time');
   const retInput = document.getElementById('expected_return');
   
-  // Current local date/time YYYY-MM-DDTHH:MM
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const localIso = now.getFullYear() + '-' +

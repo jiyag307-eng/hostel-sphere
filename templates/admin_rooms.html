@@ -170,22 +170,22 @@
           <!-- Current Occupants in this Room -->
           {% set occupants = room_occupants.get(r.id, []) %}
           {% if occupants %}
-            <div style="background: #111827; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem;">
-              <h5 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+            <div style="background: var(--grey-light); border-radius: var(--radius-sm); padding: 1rem;">
+              <h5 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.65rem; letter-spacing: 0.05em;">
                 Current Occupants
               </h5>
               <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 {% for occ in occupants %}
-                  <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <span class="badge badge-pending">Bed #{{ occ.bed_number }}</span>
-                      <strong>{{ occ.full_name }}</strong>
+                  <div style="display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 0.65rem 0.85rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                    <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                      <span class="badge" style="background: var(--grey-light); color: var(--black); font-weight: 700;">Bed #{{ occ.bed_number }}</span>
+                      <strong style="color: var(--black);">{{ occ.full_name }}</strong>
                       <span style="font-size: 0.8rem; color: var(--text-muted); font-family: monospace;">({{ occ.roll_number }})</span>
-                      <span style="font-size: 0.8rem; color: var(--secondary);">📞 {{ occ.phone }}</span>
+                      <span style="font-size: 0.8rem; color: #4B5563;">📞 {{ occ.phone }}</span>
                     </div>
 
                     <form method="POST" action="{{ url_for('admin_deallot_room', allotment_id=occ.allotment_id) }}" onsubmit="return confirm('Deallocate {{ occ.full_name }} from Room {{ r.room_number }}?');">
-                      <button type="submit" class="btn btn-sm btn-outline" style="color: var(--danger); border-color: #fca5a5; padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                      <button type="submit" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; font-weight: 700;">
                         Deallocate
                       </button>
                     </form>
@@ -194,8 +194,8 @@
               </div>
             </div>
           {% else %}
-            <div style="background: #111827; padding: 0.65rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
-              No students currently allotted to this room. All beds vacant.
+            <div style="background: var(--grey-light); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
+              All beds currently vacant in this room.
             </div>
           {% endif %}
         </div>
