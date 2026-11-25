@@ -12,6 +12,9 @@ import datetime
 from werkzeug.security import generate_password_hash
 from database import DATABASE, init_db
 
+def hash_pw(password):
+    return generate_password_hash(password, method='pbkdf2:sha256')
+
 def seed():
     # If database file exists, safely reset for clean seed
     if os.path.exists(DATABASE):
@@ -27,7 +30,7 @@ def seed():
 
     print("Seeding users...")
     # 1. Admin
-    admin_pw = generate_password_hash("admin123")
+    admin_pw = hash_pw("admin123")
     cur.execute("""
         INSERT INTO users (username, full_name, email, password_hash, role, phone, guardian_name, guardian_phone, branch, semester, gender)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -36,7 +39,7 @@ def seed():
     admin_id = cur.lastrowid
 
     # 2. Students
-    student_pw = generate_password_hash("student123")
+    student_pw = hash_pw("student123")
     students_data = [
         ("25001003043", "Jiyansh Sardana", "jiyansh@hostel.edu", student_pw, "student",
          "+91 98765 43210", "Rakesh Sardana", "+91 98765 00001", "Computer Engineering", 3, "Male"),
@@ -59,7 +62,7 @@ def seed():
 
     # 3. Parents
     print("Seeding parent accounts...")
-    parent_pw = generate_password_hash("parent123")
+    parent_pw = hash_pw("parent123")
     parents_data = [
         # (username, full_name, email, phone, ward_roll, relation)
         ("parent_25001003043", "Mr. Rakesh Sardana", "rakesh.sardana@example.com", "+91 98765 00001", "25001003043", "Father"),

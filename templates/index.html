@@ -1,53 +1,58 @@
 {% extends 'base.html' %}
 
-{% block title %}HostelSphere - Smart Hostel Management Portal{% endblock %}
+{% block title %}HostelConnect - JC Bose UST Campus Hostel Portal{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-banner">
   <div class="hero-content">
     <span class="badge" style="background: rgba(255,255,255,0.15); color: #93c5fd; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.2);">
-      ✨ Centralized Hostel Operations & Student Services
+      Official Residential Services &bull; JC Bose UST, YMCA Faridabad
     </span>
-    <h1 class="hero-title">Transparent, Connected & Smart Hostel Living</h1>
+    <h1 class="hero-title">Hostel Accommodation & Student Services</h1>
     <p class="hero-subtitle">
-      Say goodbye to scattered WhatsApp groups and outdated notice boards. Manage room allotments, track maintenance complaints in real-time, inspect daily mess menus, and apply for gate outpasses—all in one unified platform.
+      Welcome to the official hostel portal for residents, guardians, and administration. Check weekly mess schedules, request room maintenance, apply for weekend leave with parental verification, and review warden announcements.
     </p>
 
     <div class="hero-actions">
       {% if current_user %}
         {% if current_user.role == 'student' %}
-          <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Go to Student Dashboard &rarr;</a>
-          <a href="{{ url_for('student_complaints') }}" class="btn btn-secondary btn-lg">Raise Complaint</a>
+          <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">Student Dashboard &rarr;</a>
+          <a href="{{ url_for('student_complaints') }}" class="btn btn-secondary btn-lg">Lodge Complaint</a>
+        {% elif current_user.role == 'parent' %}
+          <a href="{{ url_for('parent_dashboard') }}" class="btn btn-primary btn-lg">Parent Portal &rarr;</a>
         {% else %}
-          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Open Warden Portal &rarr;</a>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">Warden Portal &rarr;</a>
           <a href="{{ url_for('admin_outpass') }}" class="btn btn-secondary btn-lg">Review Outpasses</a>
         {% endif %}
       {% else %}
-        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Resident / Staff Login</a>
-        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg">New Student Registration</a>
-        <a href="{{ url_for('notices') }}" class="btn btn-outline btn-lg" style="color: white; border-color: rgba(255,255,255,0.4);">View Notice Board</a>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Portal Sign In</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg">Student & Parent Registration</a>
+        <a href="{{ url_for('notices') }}" class="btn btn-outline btn-lg" style="color: white; border-color: rgba(255,255,255,0.4);">Notice Board</a>
       {% endif %}
     </div>
   </div>
 </section>
 
-<!-- Demo Credentials Helper Box (Great for Capstone Review) -->
+<!-- Demo Credentials Helper Box -->
 {% if not current_user %}
 <div class="card" style="border-left: 4px solid var(--primary); background: #f8fafc; margin-bottom: 2rem;">
   <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
     <div>
-      <h4 style="margin-bottom: 0.25rem;">🔑 Demonstration Accounts</h4>
+      <h4 style="margin-bottom: 0.25rem;">Portal Demo Accounts</h4>
       <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">
-        Click either account to quickly sign in or test credentials:
+        Quick test accounts for evaluation:
       </p>
     </div>
     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
       <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
-        <strong>Admin:</strong> admin / admin123
+        <strong>Admin/Warden:</strong> admin / admin123
       </a>
       <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
         <strong>Student:</strong> 25001003043 / student123
+      </a>
+      <a href="{{ url_for('login') }}" class="btn btn-sm btn-secondary" style="font-family: monospace;">
+        <strong>Parent:</strong> parent_rakesh / parent123
       </a>
     </div>
   </div>
@@ -150,12 +155,12 @@
   </div>
 </div>
 
-<!-- Features Overview / Project Highlights -->
+<!-- Features Overview / Practical Highlights -->
 <div class="card" style="padding: 2.25rem;">
   <div style="text-align: center; max-width: 650px; margin: 0 auto 2rem auto;">
-    <h2 style="margin-bottom: 0.5rem;">Engineered for Real-World Campus Living</h2>
+    <h2 style="margin-bottom: 0.5rem;">Hostel Facilities & Student Services</h2>
     <p style="color: var(--text-muted); font-size: 0.95rem;">
-      Modular role-based architecture bridging students and hostel administration seamlessly.
+      Essential residential accommodation services connecting students, guardians, and hostel caretakers.
     </p>
   </div>
 
@@ -164,7 +169,7 @@
       <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🛏️</div>
       <h4>Room Allotments</h4>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Instant bed allocation, room specifications, and verified roommate directories.
+        Check allocated room specifications, bed numbers, and verified roommate contact info.
       </p>
     </div>
 
@@ -172,23 +177,23 @@
       <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🛠️</div>
       <h4>Maintenance Desk</h4>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Categorized complaints with priority tagging, status tracking, and admin remarks.
+        Report plumbing, electrical, or Wi-Fi repairs directly with real-time status updates from staff.
       </p>
     </div>
 
     <div style="text-align: center; padding: 1rem;">
       <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🎫</div>
-      <h4>Digital Gate Pass</h4>
+      <h4>Parent-Verified Outpasses</h4>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Paperless outpass requests with warden verification and printable checkpoint pass.
+        2-step leave applications verified by parents before warden clearance and gate pass issuance.
       </p>
     </div>
 
     <div style="text-align: center; padding: 1rem;">
       <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🍽️</div>
-      <h4>Weekly Mess Menu</h4>
+      <h4>Weekly Mess Timetable</h4>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-        Interactive 7-day breakfast, lunch, snacks, and dinner schedules with timing alerts.
+        7-day breakfast, lunch, evening tea, and dinner menus with serving timings and special dishes.
       </p>
     </div>
   </div>
